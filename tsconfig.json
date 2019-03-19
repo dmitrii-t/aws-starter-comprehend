@@ -1,8 +1,14 @@
 {
   "compilerOptions": {
-    "target":"ES2018",
+    "outDir": "./bin",
+    "rootDir": "./src",
+    "target": "ES2018",
     "module": "commonjs",
-    "lib": ["es2016", "es2017.object", "es2017.string"],
+    "lib": [
+      "es2016",
+      "es2017.object",
+      "es2017.string"
+    ],
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -16,6 +22,11 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization":false
-  }
+    "strictPropertyInitialization": false
+  },
+  "exclude": [
+    "./bin",
+    "./node_modules",
+    "**/*.spec.ts"
+  ]
 }

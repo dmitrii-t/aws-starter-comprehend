@@ -1,3 +1,9 @@
+# NodeJS ignoreds
 *.js
 *.d.ts
 node_modules
+bin/
+
+# Intellij ignoreds
+.idea/
+*.iml

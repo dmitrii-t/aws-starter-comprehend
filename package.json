@@ -2,7 +2,7 @@
   "name": "aws-starter-comprehend",
   "version": "0.1.0",
   "bin": {
-    "aws-starter-comprehend": "bin/aws-starter-comprehend.js"
+    "aws-starter-comprehend": "./bin/CloudFormation.js"
   },
   "scripts": {
     "build": "tsc",
@@ -10,12 +10,15 @@
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@aws-cdk/aws-kinesis": "^0.25.3",
+    "@aws-cdk/aws-lambda": "^0.25.3",
+    "@aws-cdk/cdk": "^0.25.3",
     "@types/node": "8.10.40",
-    "typescript": "^3.3.3333",
-    "aws-cdk": "^0.25.3"
+    "aws-cdk": "^0.25.3",
+    "typescript": "^3.3.3333"
   },
   "dependencies": {
-    "@aws-cdk/cdk": "^0.25.3",
+    "@aws-cdk/aws-lambda-event-sources": "^0.25.3",
     "source-map-support": "^0.5.9"
   }
 }
