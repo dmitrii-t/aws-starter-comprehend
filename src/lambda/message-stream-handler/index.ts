@@ -1,4 +1,3 @@
-
 // Message Stream Handler
 export function handler(event: any) {
   const eventStr = JSON.stringify(event);

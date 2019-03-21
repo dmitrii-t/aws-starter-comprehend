@@ -7,18 +7,23 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "test": "jest",
     "cdk": "cdk"
   },
   "devDependencies": {
     "@aws-cdk/aws-kinesis": "^0.25.3",
     "@aws-cdk/aws-lambda": "^0.25.3",
+    "@aws-cdk/aws-s3": "^0.25.3",
     "@aws-cdk/cdk": "^0.25.3",
     "@types/node": "8.10.40",
     "aws-cdk": "^0.25.3",
+    "jest": "^24.5.0",
     "typescript": "^3.3.3333"
   },
   "dependencies": {
+    "@aws-cdk/aws-cloudwatch": "^0.25.3",
     "@aws-cdk/aws-lambda-event-sources": "^0.25.3",
+    "aws-sdk": "^2.424.0",
     "source-map-support": "^0.5.9"
   }
 }
