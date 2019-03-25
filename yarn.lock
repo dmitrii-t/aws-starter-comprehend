@@ -2,259 +2,260 @@
 # yarn lockfile v1
 
 
-"@aws-cdk/applet-js@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/applet-js/-/applet-js-0.25.3.tgz#7485f9a60dca31b87e69613ba616c78d57b675e3"
+"@aws-cdk/applet-js@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/applet-js/-/applet-js-0.26.0.tgz#2190505a0d18f7a78fd01c40fa2fce93733e2bcf"
   dependencies:
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/cdk" "^0.26.0"
     fs-extra "^7.0.0"
     source-map-support "^0.5.6"
     yaml "^1.1.0"
 
-"@aws-cdk/assets@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/assets/-/assets-0.25.3.tgz#89a270b781423676d5e6c6d4075a273076f2bc15"
+"@aws-cdk/assets@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/assets/-/assets-0.26.0.tgz#202b178d64ffcc1af6d8a43ab3e39a88692931d7"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-s3" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-s3" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
+    "@aws-cdk/cx-api" "^0.26.0"
 
-"@aws-cdk/aws-apigateway@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigateway/-/aws-apigateway-0.25.3.tgz#1a8301ea8bc53fabe003a6675a84bf02667f566f"
+"@aws-cdk/aws-apigateway@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigateway/-/aws-apigateway-0.26.0.tgz#c921d99b61b3926cb036a3b83f0e493d77e089ee"
   dependencies:
-    "@aws-cdk/aws-elasticloadbalancingv2" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-lambda" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-elasticloadbalancingv2" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-lambda" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-applicationautoscaling@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-applicationautoscaling/-/aws-applicationautoscaling-0.25.3.tgz#dba2446eb9d835a9fc4c1a72803f8f87958bac38"
+"@aws-cdk/aws-applicationautoscaling@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-applicationautoscaling/-/aws-applicationautoscaling-0.26.0.tgz#9d71927576935b14aeb166da911dc3c2a71ff930"
   dependencies:
-    "@aws-cdk/aws-autoscaling-common" "^0.25.3"
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-autoscaling-common" "^0.26.0"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-autoscaling-api@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-autoscaling-api/-/aws-autoscaling-api-0.25.3.tgz#ed58d5ee1ffa862023ca91cbf7986d192cde2307"
+"@aws-cdk/aws-autoscaling-api@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-autoscaling-api/-/aws-autoscaling-api-0.26.0.tgz#2d3251690cb58a741c9e304887abf96d50a108da"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-autoscaling-common@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-autoscaling-common/-/aws-autoscaling-common-0.25.3.tgz#47762130db3062c10df6ca2fb9bf837fdeda1f69"
+"@aws-cdk/aws-autoscaling-common@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-autoscaling-common/-/aws-autoscaling-common-0.26.0.tgz#f69fb26b75fda49f1cf67ad76abd9efdd4e03b81"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-cloudwatch@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudwatch/-/aws-cloudwatch-0.25.3.tgz#31e50440ba03b8189cd154683a82ef36b6cc1fef"
+"@aws-cdk/aws-cloudwatch@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-cloudwatch/-/aws-cloudwatch-0.26.0.tgz#24dd34484af5748d34c2c5619ec7bcce8d321c59"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-codedeploy-api@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-codedeploy-api/-/aws-codedeploy-api-0.25.3.tgz#6f77eb37a8e522ade3193f92c00ade64905bf7d2"
+"@aws-cdk/aws-codedeploy-api@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-codedeploy-api/-/aws-codedeploy-api-0.26.0.tgz#05c5f5d69e98c8603fab8721a99512d17ec77a26"
   dependencies:
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-codepipeline-api@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-codepipeline-api/-/aws-codepipeline-api-0.25.3.tgz#71b7cc1d256e53cf06bd6fa7c863c9d4cac54a9e"
+"@aws-cdk/aws-codepipeline-api@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-codepipeline-api/-/aws-codepipeline-api-0.26.0.tgz#58fa2b9cb26c786e32c4895b7c9000d01287d616"
   dependencies:
-    "@aws-cdk/aws-events" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-events" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-dynamodb@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-dynamodb/-/aws-dynamodb-0.25.3.tgz#82e197009500fdf84d9325ea778b63031a48f46e"
+"@aws-cdk/aws-dynamodb@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-dynamodb/-/aws-dynamodb-0.26.0.tgz#8fbb8c9ec38e814fa635be6fe98e1affdd9537ba"
   dependencies:
-    "@aws-cdk/aws-applicationautoscaling" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-applicationautoscaling" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-ec2@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-ec2/-/aws-ec2-0.25.3.tgz#7f7eb0bdaf23da488bac51daa09f63ab10bbd3f0"
+"@aws-cdk/aws-ec2@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-ec2/-/aws-ec2-0.26.0.tgz#3acda53bc09131209c8991d85cecf8ba9c24e3ac"
   dependencies:
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
+    "@aws-cdk/cx-api" "^0.26.0"
 
-"@aws-cdk/aws-elasticloadbalancingv2@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticloadbalancingv2/-/aws-elasticloadbalancingv2-0.25.3.tgz#088bfb67146672633a2c52e7c05fed9a3a5f5ebf"
+"@aws-cdk/aws-elasticloadbalancingv2@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticloadbalancingv2/-/aws-elasticloadbalancingv2-0.26.0.tgz#4c2aec70b3ee9b80d99c195c85a56a1110fc3102"
   dependencies:
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-codedeploy-api" "^0.25.3"
-    "@aws-cdk/aws-ec2" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-route53" "^0.25.3"
-    "@aws-cdk/aws-s3" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-codedeploy-api" "^0.26.0"
+    "@aws-cdk/aws-ec2" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-route53" "^0.26.0"
+    "@aws-cdk/aws-s3" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-elasticsearch@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticsearch/-/aws-elasticsearch-0.25.3.tgz#3b503b983246fbc74f760e7c1188d1e13f00e1e8"
+"@aws-cdk/aws-elasticsearch@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticsearch/-/aws-elasticsearch-0.26.0.tgz#1558459cba950c9d000837c64273a7e4ac330de1"
   dependencies:
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-events@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-events/-/aws-events-0.25.3.tgz#5cdd118587ba7b78f587e3c84b5d5f2914d73d35"
+"@aws-cdk/aws-events@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-events/-/aws-events-0.26.0.tgz#004583043e7c2c24883e8fc26dbf46a15ed0ea10"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-iam@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-iam/-/aws-iam-0.25.3.tgz#2e91a96387b40098c15b0508de13578ce4314bfd"
+"@aws-cdk/aws-iam@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-iam/-/aws-iam-0.26.0.tgz#0f81ac94214912013f934713871d45493ffa4143"
   dependencies:
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/cdk" "^0.26.0"
+    "@aws-cdk/region-info" "^0.26.0"
 
-"@aws-cdk/aws-kinesis@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kinesis/-/aws-kinesis-0.25.3.tgz#1faa4277171f8bc77de5a5d86ab2c7eb87455b39"
+"@aws-cdk/aws-kinesis@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kinesis/-/aws-kinesis-0.26.0.tgz#39bdbb03939405469c48b677026a7888fefd079f"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-kms" "^0.25.3"
-    "@aws-cdk/aws-logs" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-kms" "^0.26.0"
+    "@aws-cdk/aws-logs" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-kms@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kms/-/aws-kms-0.25.3.tgz#f14f780f3f21a386bf6aac39776972bd4a7b6362"
+"@aws-cdk/aws-kms@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kms/-/aws-kms-0.26.0.tgz#e796cb2f9162b6b95dcb429bfa41d5260821ea58"
   dependencies:
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-lambda-event-sources@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-lambda-event-sources/-/aws-lambda-event-sources-0.25.3.tgz#51caa418368374cccb6c510709ef3d0a6080cf76"
+"@aws-cdk/aws-lambda-event-sources@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-lambda-event-sources/-/aws-lambda-event-sources-0.26.0.tgz#9b33aee96bbb0d0f71db24d9e5a5536fa9a20b22"
   dependencies:
-    "@aws-cdk/aws-apigateway" "^0.25.3"
-    "@aws-cdk/aws-dynamodb" "^0.25.3"
-    "@aws-cdk/aws-events" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-kinesis" "^0.25.3"
-    "@aws-cdk/aws-lambda" "^0.25.3"
-    "@aws-cdk/aws-s3" "^0.25.3"
-    "@aws-cdk/aws-sns" "^0.25.3"
-    "@aws-cdk/aws-sqs" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-apigateway" "^0.26.0"
+    "@aws-cdk/aws-dynamodb" "^0.26.0"
+    "@aws-cdk/aws-events" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-kinesis" "^0.26.0"
+    "@aws-cdk/aws-lambda" "^0.26.0"
+    "@aws-cdk/aws-s3" "^0.26.0"
+    "@aws-cdk/aws-sns" "^0.26.0"
+    "@aws-cdk/aws-sqs" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-lambda@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-lambda/-/aws-lambda-0.25.3.tgz#188b963bac74ecfb8f9640b1fc757beff5bc8aee"
+"@aws-cdk/aws-lambda@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-lambda/-/aws-lambda-0.26.0.tgz#b94ccb77f78dccd93ececc4a45fd9a1f6b0dfa47"
   dependencies:
-    "@aws-cdk/assets" "^0.25.3"
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-codepipeline-api" "^0.25.3"
-    "@aws-cdk/aws-ec2" "^0.25.3"
-    "@aws-cdk/aws-events" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-logs" "^0.25.3"
-    "@aws-cdk/aws-s3" "^0.25.3"
-    "@aws-cdk/aws-s3-notifications" "^0.25.3"
-    "@aws-cdk/aws-sqs" "^0.25.3"
-    "@aws-cdk/aws-stepfunctions" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/assets" "^0.26.0"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-codepipeline-api" "^0.26.0"
+    "@aws-cdk/aws-ec2" "^0.26.0"
+    "@aws-cdk/aws-events" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-logs" "^0.26.0"
+    "@aws-cdk/aws-s3" "^0.26.0"
+    "@aws-cdk/aws-s3-notifications" "^0.26.0"
+    "@aws-cdk/aws-sqs" "^0.26.0"
+    "@aws-cdk/aws-stepfunctions" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
+    "@aws-cdk/cx-api" "^0.26.0"
 
-"@aws-cdk/aws-logs@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-logs/-/aws-logs-0.25.3.tgz#aa7941cdb1951e09ba385f1362b2145e17831222"
+"@aws-cdk/aws-logs@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-logs/-/aws-logs-0.26.0.tgz#f8cb463853b4518236dfbf87ca29e6dd4ade2022"
   dependencies:
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-route53@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-route53/-/aws-route53-0.25.3.tgz#933117e8ce601e749b46019de5180e73bb7a0a21"
+"@aws-cdk/aws-route53@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-route53/-/aws-route53-0.26.0.tgz#e24b1a3099e6afad2baf2cf6cfad43a3ce5dba90"
   dependencies:
-    "@aws-cdk/aws-ec2" "^0.25.3"
-    "@aws-cdk/aws-logs" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/aws-ec2" "^0.26.0"
+    "@aws-cdk/aws-logs" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
+    "@aws-cdk/cx-api" "^0.26.0"
 
-"@aws-cdk/aws-s3-notifications@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-s3-notifications/-/aws-s3-notifications-0.25.3.tgz#5f5c89b45bf75f7809dd9b03561b6320e1bdd601"
+"@aws-cdk/aws-s3-notifications@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-s3-notifications/-/aws-s3-notifications-0.26.0.tgz#8ee5b3e347859c57d498cb4745313528a1ac1a07"
   dependencies:
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-s3@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-s3/-/aws-s3-0.25.3.tgz#5c9f25e769f95936df197b076eb879669baa308c"
+"@aws-cdk/aws-s3@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-s3/-/aws-s3-0.26.0.tgz#098d2f632243a4324cd6e2ce62ae66657ff047e0"
   dependencies:
-    "@aws-cdk/aws-codepipeline-api" "^0.25.3"
-    "@aws-cdk/aws-events" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-kms" "^0.25.3"
-    "@aws-cdk/aws-s3-notifications" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-codepipeline-api" "^0.26.0"
+    "@aws-cdk/aws-events" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-kms" "^0.26.0"
+    "@aws-cdk/aws-s3-notifications" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-sns@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-sns/-/aws-sns-0.25.3.tgz#4b615ec766f2f79c32db499e229374f6f9ef0df0"
+"@aws-cdk/aws-sns@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-sns/-/aws-sns-0.26.0.tgz#bbef9be017cf99b0bd99f92ae7143953cc100ff0"
   dependencies:
-    "@aws-cdk/aws-autoscaling-api" "^0.25.3"
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-events" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-lambda" "^0.25.3"
-    "@aws-cdk/aws-s3-notifications" "^0.25.3"
-    "@aws-cdk/aws-sqs" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-autoscaling-api" "^0.26.0"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-events" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-lambda" "^0.26.0"
+    "@aws-cdk/aws-s3-notifications" "^0.26.0"
+    "@aws-cdk/aws-sqs" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-sqs@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-sqs/-/aws-sqs-0.25.3.tgz#614def137661e678ae6624cff8ea77d71756b8dd"
+"@aws-cdk/aws-sqs@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-sqs/-/aws-sqs-0.26.0.tgz#fdce441601580ba1c5b0a559e03ae5f122427556"
   dependencies:
-    "@aws-cdk/aws-autoscaling-api" "^0.25.3"
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/aws-kms" "^0.25.3"
-    "@aws-cdk/aws-s3-notifications" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-autoscaling-api" "^0.26.0"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/aws-kms" "^0.26.0"
+    "@aws-cdk/aws-s3-notifications" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/aws-stepfunctions@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-stepfunctions/-/aws-stepfunctions-0.25.3.tgz#cad0fff66cf75113b8af7997c5b0502fb570f706"
+"@aws-cdk/aws-stepfunctions@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-stepfunctions/-/aws-stepfunctions-0.26.0.tgz#3b40ffee084ec1d8b81d09918b751a4f806277db"
   dependencies:
-    "@aws-cdk/aws-cloudwatch" "^0.25.3"
-    "@aws-cdk/aws-events" "^0.25.3"
-    "@aws-cdk/aws-iam" "^0.25.3"
-    "@aws-cdk/cdk" "^0.25.3"
+    "@aws-cdk/aws-cloudwatch" "^0.26.0"
+    "@aws-cdk/aws-events" "^0.26.0"
+    "@aws-cdk/aws-iam" "^0.26.0"
+    "@aws-cdk/cdk" "^0.26.0"
 
-"@aws-cdk/cdk@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/cdk/-/cdk-0.25.3.tgz#76373b011dcdb2950f054beb782c7a61ccec5c0b"
+"@aws-cdk/cdk@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/cdk/-/cdk-0.26.0.tgz#f14ba43939af12881423e440ee10790c2f52b5dc"
   dependencies:
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/cx-api" "^0.26.0"
 
-"@aws-cdk/cfnspec@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/cfnspec/-/cfnspec-0.25.3.tgz#dbebf944721c8edd512574640c25032c35d6dc34"
+"@aws-cdk/cfnspec@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/cfnspec/-/cfnspec-0.26.0.tgz#ee8ccbd78366f56dbe4a9c6cd2a41cdc15bfd95f"
   dependencies:
     md5 "^2.2.1"
 
-"@aws-cdk/cloudformation-diff@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/cloudformation-diff/-/cloudformation-diff-0.25.3.tgz#f27652b9eee543ee5080361457edba21f22c6e32"
+"@aws-cdk/cloudformation-diff@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/cloudformation-diff/-/cloudformation-diff-0.26.0.tgz#c00a08d8f801e10b00427388b055b180e5af6c05"
   dependencies:
-    "@aws-cdk/cfnspec" "^0.25.3"
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/cfnspec" "^0.26.0"
+    "@aws-cdk/cx-api" "^0.26.0"
     colors "^1.2.1"
     diff "^4.0.1"
     fast-deep-equal "^2.0.1"
@@ -262,9 +263,13 @@
     string-width "^2.1.1"
     table "^5.2.1"
 
-"@aws-cdk/cx-api@^0.25.3":
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/@aws-cdk/cx-api/-/cx-api-0.25.3.tgz#3049992897edf04285b5310f4fbed33f632bc7c5"
+"@aws-cdk/cx-api@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/cx-api/-/cx-api-0.26.0.tgz#6e10926c6d18655bb502d41edfe2d2b07f94e498"
+
+"@aws-cdk/region-info@^0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/region-info/-/region-info-0.26.0.tgz#cee948bedca13a5afe65b9fce67d0a88435f8cad"
 
 "@babel/code-frame@^7.0.0":
   version "7.0.0"
@@ -756,13 +761,14 @@ atob@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
 
-aws-cdk@^0.25.3:
-  version "0.25.3"
-  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-0.25.3.tgz#649db1ec2a44b92982c24671d2eda66984c74064"
+aws-cdk@^0.26.0:
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/aws-cdk/-/aws-cdk-0.26.0.tgz#bdcad588b31cf3e37bd6e14f5ef56e93a77906b1"
   dependencies:
-    "@aws-cdk/applet-js" "^0.25.3"
-    "@aws-cdk/cloudformation-diff" "^0.25.3"
-    "@aws-cdk/cx-api" "^0.25.3"
+    "@aws-cdk/applet-js" "^0.26.0"
+    "@aws-cdk/cloudformation-diff" "^0.26.0"
+    "@aws-cdk/cx-api" "^0.26.0"
+    "@aws-cdk/region-info" "^0.26.0"
     archiver "^2.1.1"
     aws-sdk "^2.259.1"
     camelcase "^5.0.0"
