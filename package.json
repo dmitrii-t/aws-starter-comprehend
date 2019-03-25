@@ -12,6 +12,8 @@
   },
   "devDependencies": {
     "@aws-cdk/aws-cloudwatch": "^0.25.3",
+    "@aws-cdk/aws-ec2": "^0.25.3",
+    "@aws-cdk/aws-elasticsearch": "^0.25.3",
     "@aws-cdk/aws-iam": "^0.25.3",
     "@aws-cdk/aws-kinesis": "^0.25.3",
     "@aws-cdk/aws-lambda": "^0.25.3",

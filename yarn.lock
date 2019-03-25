@@ -102,6 +102,12 @@
     "@aws-cdk/aws-s3" "^0.25.3"
     "@aws-cdk/cdk" "^0.25.3"
 
+"@aws-cdk/aws-elasticsearch@^0.25.3":
+  version "0.25.3"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticsearch/-/aws-elasticsearch-0.25.3.tgz#3b503b983246fbc74f760e7c1188d1e13f00e1e8"
+  dependencies:
+    "@aws-cdk/cdk" "^0.25.3"
+
 "@aws-cdk/aws-events@^0.25.3":
   version "0.25.3"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-events/-/aws-events-0.25.3.tgz#5cdd118587ba7b78f587e3c84b5d5f2914d73d35"

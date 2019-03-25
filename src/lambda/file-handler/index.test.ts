@@ -10,8 +10,8 @@ it('ensures text is mapped to data records', () => {
   expect(records.length).toBe(2);
 
   const first: PutRecordsRequestEntry = records[0];
-  expect(JSON.parse(first.Data as string)).toEqual(({index: 0, text: 'qwe'} as DataRecord));
+  expect(JSON.parse(first.Data as string)).toEqual(({lineNo: 0, text: 'qwe'} as DataRecord));
 
   const second: PutRecordsRequestEntry = records[1];
-  expect(JSON.parse(second.Data as string)).toEqual(({index: 1, text: 'asd'} as DataRecord))
+  expect(JSON.parse(second.Data as string)).toEqual(({lineNo: 1, text: 'asd'} as DataRecord))
 });

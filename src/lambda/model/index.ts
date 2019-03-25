@@ -2,7 +2,9 @@
  * Model class DataRecord
  */
 export interface DataRecord {
-  index: number
+  filename: string
+  timestamp: number
   sentiment: string
+  lineNo: number
   text: string
 }

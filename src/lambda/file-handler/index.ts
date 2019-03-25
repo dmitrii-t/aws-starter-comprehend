@@ -46,11 +46,11 @@ export function toDataRecords(text: string): DataRecord[] {
   // Formats lines to send to the data stream
   return lines
     .filter((line: string) => line.length > 0)
-    .map((text: string, index: number) => ({text, index} as DataRecord))
+    .map((text: string, lineNo: number) => ({text, lineNo} as DataRecord))
 }
 
 export function toPutRecordsRequestEntries(record: DataRecord): PutRecordsRequestEntry {
-  const id = record.index + '-' + record.text;
+  const id = record.lineNo + '-' + record.text;
   return {
     Data: JSON.stringify(record),
     // Generates partition keys

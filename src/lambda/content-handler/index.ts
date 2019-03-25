@@ -10,8 +10,8 @@ export async function handler(event: any) {
   console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
 
   // Parses data record
-  const records = parse(event, (serialized: string) => {
-    return JSON.parse(serialized) as DataRecord
+  const records = parse(event, (data: string) => {
+    return {...JSON.parse(data), ...{timestamp: new Date().getTime()}} as DataRecord
   });
 
   // Detects sentiment analysiss
