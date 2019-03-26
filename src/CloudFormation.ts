@@ -14,35 +14,36 @@ class AwsStarterComprehendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const vpcId = `${this.name}Vpc`;
+    const vpcId = 'Vpc';
 
     // Network configuration
     const vpc = new ec2.VpcNetwork(this, vpcId, {
       cidr: '10.0.0.0/16',
-      natGateways: 0,
+      natGateways: 1,
       natGatewayPlacement: {subnetName: 'PublicSubnet'},
       subnetConfiguration: [
         {
-          cidrMask: '10.0.1.0/24',
+          cidrMask: 24,
           name: 'PublicSubnet',
           subnetType: SubnetType.Public,
         },
         {
-          cidrMask: '10.0.2.0/24',
+          cidrMask: 24,
           name: 'LambdaSubnet',
           subnetType: SubnetType.Private,
+        },
+        {
+          cidrMask: 24,
+          name: 'ElasticsearchSubnet',
+          subnetType: SubnetType.Isolated,
         }
       ],
     });
 
-    const elasticsearchSubnetId = 'ElasticsearchSubnet';
-    const elasticsearchSubnet = new ec2.VpcPrivateSubnet(this, elasticsearchSubnetId, {
-      vpcId,
-      cidrBlock: '10.0.3.0/24'
-    });
+    const elasticsearchSubnet = vpc.subnets({subnetName: 'ElasticsearchSubnet'})[0];
 
     // Public SG allows http access from the Internet
-    const publicSg = new ec2.SecurityGroup(this, `${this.name}PublicSG`, {
+    const publicSg = new ec2.SecurityGroup(this, 'PublicSG', {
       vpc: vpc,
       description: 'Public security group with http access',
       allowAllOutbound: true
@@ -50,34 +51,47 @@ class AwsStarterComprehendStack extends cdk.Stack {
     publicSg.addIngressRule(new ec2.AnyIPv4(), new ec2.TcpPort(80));
 
     //
-    const lambdaSg = new ec2.SecurityGroup(this, `${this.name}LambdaSG`, {
+    const lambdaSg = new ec2.SecurityGroup(this, 'LambdaSG', {
       vpc: vpc,
       description: 'Private security group for to allow lambdas to access VPC resources',
       allowAllOutbound: true
     });
 
-
     // Elasticsearch security group
-    const elasticsearchSgId = `${this.name}ElasticsearchSG`;
-    const elasticsearchSg = new ec2.SecurityGroup(this, elasticsearchSgId, {
+    const elasticsearchSg = new ec2.SecurityGroup(this, 'ElasticsearchSG', {
       vpc: vpc,
       description: 'Private security group with limited access from public and lambda groups only'
     });
     elasticsearchSg.addIngressRule(publicSg, new ec2.TcpPort(80));
     elasticsearchSg.addIngressRule(lambdaSg, new ec2.TcpPort(80));
 
-    //
-    const elasticsearch = new es.CfnDomain(this, `${this.name}Elasticsearch`, {
+    // Elasticsearch cluster
+    const serviceLinkedRole = new iam.CfnServiceLinkedRole(this, 'ElasticseaerchServiceLinkedRole', {
+      awsServiceName: 'es.amazonaws.com'
+    });
+    const elasticsearch = new es.CfnDomain(this, `Elasticsearch`, {
       elasticsearchVersion: '6.4',
+      accessPolicies: new iam.PolicyDocument()
+        .addStatement(new iam.PolicyStatement()
+          .addAwsPrincipal('*')
+          .addResource('arn:aws:es:*')
+          .addAction('es:*')),
+      elasticsearchClusterConfig: {
+        // The t2.micro.elasticsearch instance type supports only Elasticsearch 1.5 and 2.3.
+        instanceType: 't2.small.elasticsearch',
+        instanceCount: 1
+      },
       ebsOptions: {
-        // We will use ephemeral storages for this demo project for simplicity
-        ebsEnabled: false,
+        ebsEnabled: true,
+        volumeType: 'gp2',
+        volumeSize: 10,
       },
       vpcOptions: {
-        subnetIds: [elasticsearchSubnetId],
-        securityGroupIds: [elasticsearchSgId]
+        subnetIds: [elasticsearchSubnet.subnetId],
+        securityGroupIds: [elasticsearchSg.securityGroupId]
       }
     });
+
 
     // Defines source message bucket
     const fileBucket = new s3.Bucket(this, 'FileBucket');
@@ -113,7 +127,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
       securityGroup: lambdaSg,
       // Lambda ENV setup
       environment: {
-        elasticsearch_url: elasticsearch.domainEndpoint
+        elasticsearch_endpoint: elasticsearch.domainEndpoint
       }
     });
     contentHandler.addEventSource(new event_sources.KinesisEventSource(contentStream, {
