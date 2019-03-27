@@ -1,5 +1,5 @@
 import { PutRecordsRequestEntry } from 'aws-sdk/clients/kinesis';
-import { DataRecord } from '../model';
+import { DataRecord } from '../../model';
 
 it('ensures text is mapped to data records', () => {
   const toPutRecordsRequestEntries = require('./index').toPutRecordsRequestEntries;

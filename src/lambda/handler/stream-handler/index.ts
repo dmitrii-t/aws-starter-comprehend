@@ -1,9 +1,9 @@
 // Stream Handler
 import * as aws from 'aws-sdk';
-import { parse } from '../util/kinesis';
-import { asyncDetectSentiment } from '../util/comprehend';
+import { parse } from '../../util/kinesis';
+import { asyncDetectSentiment } from '../../util/comprehend';
 import axios from 'axios';
-import { DataRecord } from '../model';
+import { DataRecord } from '../../model';
 
 const headers = {'Content-Type': 'application/json'};
 
