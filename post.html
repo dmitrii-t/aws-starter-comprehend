@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<body>
+<div>
+    <form>
+        <div>
+            <label for="file-input">Browse files to upload</label>
+            <input type="file" accept="text/plain" id="file-input">
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+<script>
+    var ENDPOINT_URL = "https://7yq2cd6s43.execute-api.us-west-2.amazonaws.com/prod/";
+
+    function readAsBase64(file) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function () {
+                resolve(reader.result);
+            };
+            reader.onerror = function (error) {
+                reject(error);
+            };
+        });
+    }
+
+    function showResult(json) {
+        // TODO
+        //     var image = new Image();
+        //     document.body.append(image);
+        //     image.src = url;
+    }
+
+    function post(file) {
+        readAsBase64(file)
+            .then(function (encodedFile) {
+                var data = encodedFile.split('base64,')[1];
+                var body = JSON.stringify({
+                    name: file.name,
+                    type: file.type,
+                    data: data
+                });
+                return fetch(ENDPOINT_URL, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: body
+                });
+            })
+            .then(function (response) {
+                if (response.ok) {
+                    // TODO Parse actual response if needed
+                    // return response.json();
+                    return {}
+                }
+                throw new Error("Request failed with status:" + response.status + ":" + response.statusText);
+            })
+            .then(function (json) {
+                showResult(json);
+            })
+            .catch(function (error) {
+                console.error('Error:', error);
+            });
+    }
+
+    var fileForm = document.querySelector("form");
+    fileForm.onsubmit = function (event) {
+        event.preventDefault();
+
+        // Parses files input
+        var files = document.querySelector("input[type='file']").files;
+        if (files.length < 1) {
+            throw new Error("No files selected");
+        }
+
+        // Posts file
+        post(files[0]);
+    };
+</script>
+</body>
+</html>

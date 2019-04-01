@@ -9,7 +9,7 @@ const headers = {'Content-Type': 'application/json'};
 
 const comprehend = new aws.Comprehend();
 
-export async function handler(event: any) {
+export async function handler(event: any, context:any) {
   console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
 
   // Reads Env vars

@@ -14,26 +14,34 @@ class AwsStarterComprehendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const codeAsset = lambda.Code.asset('./bin/lambda');
+
     // const elasticsearch = new ElasticsearchCluster(this, 'Elasticsearch');
 
     // Defines message data stream
     const contentStream = new kinesis.Stream(this, 'ContentStream');
 
     // Defines s3 file handler which populates file contents to the data stream
-    const apiHandler = new lambda.Function(this, 'FileHandler', {
+    const postHandler = new lambda.Function(this, 'FileHandler', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'handler/api-handler/index.handler',
-      code: lambda.Code.asset('./bin/lambda'),
+      code: codeAsset,
       environment: {
         message_stream: contentStream.streamName
       }
     });
 
     // API Gateway
-    const api = new apigateway.RestApi(this, 'SentimentAnalysisApi');
+    const api = new apigateway.RestApi(this, 'SentimentAnalysisApi', {
+      // deployOptions: {
+      // loggingLevel: apigateway.MethodLoggingLevel.Info,
+      // dataTraceEnabled: true
+      // }
+    });
+
     const resource: IRestApiResource = api.root;
 
-    resource.addMethod('POST', new apigateway.LambdaIntegration(apiHandler));
+    resource.addMethod('POST', new apigateway.LambdaIntegration(postHandler));
     resource.addMethod('OPTIONS', new apigateway.MockIntegration({
       passthroughBehavior: PassthroughBehavior.Never,
       requestTemplates: {
@@ -65,13 +73,13 @@ class AwsStarterComprehendStack extends cdk.Stack {
     });
 
     // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
-    contentStream.grantWrite(apiHandler.role);
+    contentStream.grantWrite(postHandler.role);
 
     // Defines message stream handler
     const streamHandler = new lambda.Function(this, 'StreamHandler', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'handler/stream-handler/index.handler',
-      code: lambda.Code.asset('./bin/lambda'),
+      code: codeAsset,
 
       // Network config
       // ...elasticsearch.networkConfig,
