@@ -11,7 +11,8 @@ const comprehend = new aws.Comprehend();
 
 export async function handler(event: any, context:any) {
   console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
-
+  process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
+  
   // Reads Env vars
   const elasticsearchEndpoint = process.env.elasticsearch_endpoint as string;
 

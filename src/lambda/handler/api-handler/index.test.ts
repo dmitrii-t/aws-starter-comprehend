@@ -1,5 +1,6 @@
 import { PutRecordsRequestEntry } from 'aws-sdk/clients/kinesis';
 import { DataRecord } from '../../model';
+import { it } from 'mocha'
 
 it('ensures text is mapped to data records', () => {
   const toPutRecordsRequestEntries = require('./index').toPutRecordsRequestEntries;

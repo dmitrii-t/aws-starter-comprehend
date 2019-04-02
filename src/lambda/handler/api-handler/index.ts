@@ -38,6 +38,7 @@ interface HttpHeaders {
 export async function handler(httpEvent: any, context: any) {
   console.info(`File handler is running with envs\n${JSON.stringify(process.env)}`);
   // console.info(`Event:\n${JSON.stringify(httpEvent)}`);
+  process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
 
   // Reads Env vars
   const streamName = process.env.message_stream as string;

@@ -26,8 +26,10 @@
     "noUnusedLocals": false
   },
   "exclude": [
-    "./bin",
-    "./node_modules",
-    "**/*.spec.ts"
+    "zip.ts",
+    "**/*.test.ts",
+    "node_modules",
+    "tools",
+    "bin"
   ]
 }

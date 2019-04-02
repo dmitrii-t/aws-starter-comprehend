@@ -14,7 +14,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const codeAsset = lambda.Code.asset('./bin/lambda');
+    const codeAsset = lambda.Code.asset('dist.zip');
 
     // const elasticsearch = new ElasticsearchCluster(this, 'Elasticsearch');
 
