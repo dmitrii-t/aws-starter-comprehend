@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/cdk';
 import * as kinesis from '@aws-cdk/aws-kinesis';
@@ -14,34 +13,27 @@ class AwsStarterComprehendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const codeAsset = lambda.Code.asset('dist.zip');
-
     // const elasticsearch = new ElasticsearchCluster(this, 'Elasticsearch');
 
     // Defines message data stream
     const contentStream = new kinesis.Stream(this, 'ContentStream');
 
     // Defines s3 file handler which populates file contents to the data stream
-    const postHandler = new lambda.Function(this, 'FileHandler', {
+    const httpHandler = new lambda.Function(this, 'HttpHandler', {
       runtime: lambda.Runtime.NodeJS810,
-      handler: 'handler/api-handler/index.handler',
-      code: codeAsset,
+      handler: 'http-handler.bundle.postHandler',
+      code: lambda.Code.asset('./bin/http-handler.bundle.js.zip'),
       environment: {
         message_stream: contentStream.streamName
       }
     });
 
     // API Gateway
-    const api = new apigateway.RestApi(this, 'SentimentAnalysisApi', {
-      // deployOptions: {
-      // loggingLevel: apigateway.MethodLoggingLevel.Info,
-      // dataTraceEnabled: true
-      // }
-    });
+    const restApi = new apigateway.RestApi(this, 'SentimentAnalysisApi');
 
-    const resource: IRestApiResource = api.root;
+    const resource: IRestApiResource = restApi.root;
 
-    resource.addMethod('POST', new apigateway.LambdaIntegration(postHandler));
+    resource.addMethod('POST', new apigateway.LambdaIntegration(httpHandler));
     resource.addMethod('OPTIONS', new apigateway.MockIntegration({
       passthroughBehavior: PassthroughBehavior.Never,
       requestTemplates: {
@@ -73,13 +65,13 @@ class AwsStarterComprehendStack extends cdk.Stack {
     });
 
     // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
-    contentStream.grantWrite(postHandler.role);
+    contentStream.grantWrite(httpHandler.role);
 
     // Defines message stream handler
     const streamHandler = new lambda.Function(this, 'StreamHandler', {
       runtime: lambda.Runtime.NodeJS810,
-      handler: 'handler/stream-handler/index.handler',
-      code: codeAsset,
+      handler: 'stream-handler.bundle.streamHandler',
+      code: lambda.Code.asset('./bin/stream-handler.bundle.js.zip'),
 
       // Network config
       // ...elasticsearch.networkConfig,

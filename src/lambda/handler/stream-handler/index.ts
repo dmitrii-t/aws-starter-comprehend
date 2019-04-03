@@ -9,10 +9,10 @@ const headers = {'Content-Type': 'application/json'};
 
 const comprehend = new aws.Comprehend();
 
-export async function handler(event: any, context:any) {
+export default async function streamHandler(event: any, context: any) {
   console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-  
+
   // Reads Env vars
   const elasticsearchEndpoint = process.env.elasticsearch_endpoint as string;
 
@@ -28,7 +28,7 @@ export async function handler(event: any, context:any) {
       .then((data: any) => ({...record, ...{sentiment: data as string}}))
       // 3. Posts the record to elasticsearch
       .then((data: any) => axios.post(elasticsearchEndpoint, data, {headers}))
-      .catch((error) => console.error(`Fail to process file [${record.filename}:${record.lineNo}]\n${error}`) )
+      .catch((error) => console.error(`Fail to process file [${record.filename}:${record.lineNo}]\n${error}`))
   });
 
   // Blocks execution to get the results

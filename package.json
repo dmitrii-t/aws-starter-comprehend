@@ -1,17 +1,18 @@
 {
   "name": "aws-starter-comprehend",
   "version": "0.1.0",
+  "private": true,
   "bin": {
     "aws-starter-comprehend": "./bin/CloudFormation.js"
   },
   "scripts": {
-    "dist": "rm -rf bin && tsc 2>/dev/null || true && ts-node zip.ts",
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "cross-env TS_NODE_PROJECT=\"tsconfig.json\" webpack --config webpack.config.ts",
+    "watch": "cross-env TS_NODE_PROJECT=\"tsconfig.json\" webpack --config webpack.config.ts --watch --progress",
     "test": "jest",
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@aws-cdk/assets": "^0.27.0",
     "@aws-cdk/aws-apigateway": "^0.26.0",
     "@aws-cdk/aws-cloudwatch": "^0.26.0",
     "@aws-cdk/aws-ec2": "^0.26.0",
@@ -25,12 +26,23 @@
     "@types/axios": "^0.14.0",
     "@types/jest": "^24.0.11",
     "@types/mocha": "^5.2.6",
-    "@types/node": "8.10.40",
+    "@types/node": "^11.13.0",
+    "@types/webpack": "^4.4.26",
+    "@types/webpack-node-externals": "^1.6.3",
+    "@types/zip-webpack-plugin": "^3.0.0",
     "archiver": "^3.0.0",
     "aws-cdk": "^0.26.0",
+    "cross-env": "^5.2.0",
     "jest": "^24.5.0",
+    "json-loader": "^0.5.7",
+    "ts-loader": "^5.3.3",
     "ts-node": "^8.0.3",
-    "typescript": "^3.3.3333"
+    "tsconfig-paths": "^3.8.0",
+    "typescript": "^3.3.3333",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0",
+    "webpack-node-externals": "^1.7.2",
+    "zip-webpack-plugin": "^3.0.0"
   },
   "dependencies": {
     "aws-sdk": "^2.424.0",

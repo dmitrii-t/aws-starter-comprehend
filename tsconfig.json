@@ -2,31 +2,36 @@
   "compilerOptions": {
     "outDir": "./bin",
     "rootDir": "./src",
-    "target": "ES2018",
+    "target": "es2017",
     "module": "commonjs",
     "lib": [
       "es2016",
       "es2017.object",
       "es2017.string"
     ],
-    "declaration": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": false,
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
 
+    "declaration": false,
+
+    "inlineSources": false,
+    "inlineSourceMap": false,
+
+    "alwaysStrict": true,
+    "experimentalDecorators": false,
+
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
     "noUnusedParameters": false,
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+
+    "strict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false
   },
   "exclude": [
-    "zip.ts",
+    "webpack.config.ts",
     "**/*.test.ts",
     "node_modules",
     "tools",
