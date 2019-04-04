@@ -21,8 +21,8 @@ class AwsStarterComprehendStack extends cdk.Stack {
     // Defines s3 file handler which populates file contents to the data stream
     const httpHandler = new lambda.Function(this, 'HttpHandler', {
       runtime: lambda.Runtime.NodeJS810,
-      handler: 'http-handler.bundle.postHandler',
-      code: lambda.Code.asset('./bin/http-handler.bundle.js.zip'),
+      handler: 'index.handler',
+      code: lambda.Code.asset('./bin/http-handler'),
       environment: {
         message_stream: contentStream.streamName
       }
@@ -70,8 +70,8 @@ class AwsStarterComprehendStack extends cdk.Stack {
     // Defines message stream handler
     const streamHandler = new lambda.Function(this, 'StreamHandler', {
       runtime: lambda.Runtime.NodeJS810,
-      handler: 'stream-handler.bundle.streamHandler',
-      code: lambda.Code.asset('./bin/stream-handler.bundle.js.zip'),
+      handler: 'index.handler',
+      code: lambda.Code.asset('./bin/stream-handler'),
 
       // Network config
       // ...elasticsearch.networkConfig,

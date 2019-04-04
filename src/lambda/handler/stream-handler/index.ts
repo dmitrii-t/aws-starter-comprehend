@@ -1,29 +1,26 @@
-// Stream Handler
-import * as aws from 'aws-sdk';
-import { parse } from '../../util/kinesis';
-import { asyncDetectSentiment } from '../../util/comprehend';
+import * as KinesisUtil from '../../util/kinesis';
+import * as ComprehendUtil from '../../util/comprehend';
 import axios from 'axios';
 import { DataRecord } from '../../model';
 
 const headers = {'Content-Type': 'application/json'};
 
-const comprehend = new aws.Comprehend();
-
-export default async function streamHandler(event: any, context: any) {
-  console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
+export async function handler(messageEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
+
+  console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
 
   // Reads Env vars
   const elasticsearchEndpoint = process.env.elasticsearch_endpoint as string;
 
   // Parses data record
-  const records = parse(event, (data: string) =>
+  const records = KinesisUtil.parse(messageEvent, (data: string) =>
     ({...JSON.parse(data), ...{timestamp: new Date().getTime()}}) as DataRecord);
 
   // Detects sentiment
   const promises = records.map((record) => {
     // 1. Detects sentiment
-    return asyncDetectSentiment(comprehend, record.text)
+    return ComprehendUtil.asyncDetectSentiment(record.text)
     // 2. Assigns sentiment to the record
       .then((data: any) => ({...record, ...{sentiment: data as string}}))
       // 3. Posts the record to elasticsearch

@@ -5,6 +5,8 @@ import * as aws from 'aws-sdk';
 // AWS defined limitation
 const KINESIS_PUT_RECORDS_BATCH_SIZE = 500;
 
+const client = new aws.Kinesis();
+
 /**
  * Sends records to the data stream
  *
@@ -13,7 +15,7 @@ const KINESIS_PUT_RECORDS_BATCH_SIZE = 500;
  * @param entries
  * @param entryMapper
  */
-export function asyncPutRecords<T>(kinesis: aws.Kinesis, streamName: string, entries: T[], entryMapper: (entry: T) => PutRecordsRequestEntry): Promise<any> {
+export function asyncPutRecords<T>(streamName: string, entries: T[], entryMapper: (entry: T) => PutRecordsRequestEntry): Promise<any> {
   // Accumulates all tasks to put records
   const tasks: Promise<any>[] = [];
 
@@ -22,7 +24,7 @@ export function asyncPutRecords<T>(kinesis: aws.Kinesis, streamName: string, ent
     .forEach((batch: PutRecordsRequestEntry[]) => {
       // Submits batch of records to the data stream
       const batchTask = new Promise((resolve, reject) => {
-        kinesis.putRecords({StreamName: streamName, Records: batch}, (err: any, data: any) => {
+        client.putRecords({StreamName: streamName, Records: batch}, (err: any, data: any) => {
           if (err) reject(err);
           else resolve(data);
         });

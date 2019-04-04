@@ -1,11 +1,7 @@
-// File Handler
-import * as aws from 'aws-sdk';
 import * as crypto from 'crypto';
 import { PutRecordsRequestEntry } from 'aws-sdk/clients/kinesis';
 import { DataRecord } from '../../model';
-import { asyncPutRecords } from '../../util/kinesis';
-
-const kinesis = new aws.Kinesis();
+import * as KinesisUtil from '../../util/kinesis';
 
 const CORS_HTTP_HEADERS = {
   'Content-Type': 'application/json',
@@ -29,16 +25,10 @@ interface HttpHeaders {
   [name: string]: string
 }
 
-/**
- * Lambda handler
- *
- * @param httpEvent
- * @param context
- */
-export default async function postHandler(httpEvent: any, context: any) {
-  console.info(`File handler is running with envs\n${JSON.stringify(process.env)}`);
-  // console.info(`Event:\n${JSON.stringify(httpEvent)}`);
+export async function handler(httpEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
+
+  console.info(`File handler (${process.env['LAMBDA_TASK_ROOT']}) is running with envs\n${JSON.stringify(process.env)}`);
 
   // Reads Env vars
   const streamName = process.env.message_stream as string;
@@ -47,7 +37,7 @@ export default async function postHandler(httpEvent: any, context: any) {
   const file = JSON.parse(httpEvent['body']) as PostFileRequest;
   const text = new Buffer(file.data).toString('utf8');
 
-  await asyncPutRecords(kinesis, streamName, toDataRecords(text), toPutRecordsRequestEntries);
+  await KinesisUtil.asyncPutRecords(streamName, toDataRecords(text), toPutRecordsRequestEntries);
   console.info(`Successfully processed file ${file.name}`);
 
   // Success
@@ -57,7 +47,6 @@ export default async function postHandler(httpEvent: any, context: any) {
     headers: {...CORS_HTTP_HEADERS},
     body: ''
   };
-
 }
 
 /**
@@ -81,3 +70,4 @@ export function toPutRecordsRequestEntries(record: DataRecord): PutRecordsReques
     PartitionKey: crypto.createHash('md5').update(id).digest('hex')
   } as PutRecordsRequestEntry
 }
+

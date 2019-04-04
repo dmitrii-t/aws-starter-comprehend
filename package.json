@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "aws-sdk": "^2.424.0",
-    "axios": "^0.18.0",
-    "source-map-support": "^0.5.9"
+    "axios": "^0.18.0"
   }
 }

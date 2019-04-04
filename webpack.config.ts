@@ -1,17 +1,36 @@
 import * as path from 'path';
 import * as webpack from 'webpack';
-import ZipPlugin from 'zip-webpack-plugin';
 import nodeExternals from 'webpack-node-externals';
 
-// Sets default params
-const develop = process.env.NODE_ENV !== 'production';
-const outDir = path.resolve(__dirname, 'bin');
+// Sets build constants
+const HANDLER_MODULE = 'index';
+
+// Sets common params
+const isDevelop = process.env.NODE_ENV !== 'production';
+
+const binDir = path.resolve(__dirname, 'bin');
+
+function handlerConfig(baseConfig: webpack.Configuration, path: string): webpack.Configuration {
+  return {
+    ...baseConfig,
+    entry: [
+      `./lambda/handler/${path}/index.ts`,
+    ],
+    output: {
+      path: `${binDir}/${path}`,
+      filename: `${HANDLER_MODULE}.js`,
+      libraryTarget: 'commonjs2',
+      library: HANDLER_MODULE
+    }
+  }
+}
 
 // The configuration used by the other modules
-const commonConfig: webpack.Configuration = {
+const sharedConfig: webpack.Configuration = {
   target: 'node',
   context: path.resolve(__dirname, './src'),
-  mode: develop ? 'development' : 'production',
+  mode: isDevelop ? 'development' : 'production',
+  devtool: false,
   resolve: {
     extensions: ['.tsx', '.ts', '.js']
   },
@@ -27,48 +46,20 @@ const commonConfig: webpack.Configuration = {
   }
 };
 
-const httpHandlerConfig: webpack.Configuration = {
-  ...commonConfig,
-  entry: [
-    './lambda/handler/http-handler/index.ts',
-  ],
-  output: {
-    filename: 'http-handler.bundle.js',
-    path: outDir
-  },
-  plugins: [
-    new ZipPlugin({
-      include: /\.js(\?.*)?$/i
-    })
-  ]
-};
-
-const streamHandlerConfig: webpack.Configuration = {
-  ...commonConfig,
-  entry: [
-    './lambda/handler/stream-handler/index.ts'
-  ],
-  output: {
-    filename: 'stream-handler.bundle.js',
-    path: outDir
-  },
-  plugins: [
-    new ZipPlugin({
-      include: /\.js(\?.*)?$/i
-    })
-  ]
-};
-
 // The CloudFormation stack configuration
 const stackConfig: webpack.Configuration = {
-  ...commonConfig,
+  ...sharedConfig,
   entry: './stack/CloudFormation.ts',
   output: {
+    path: binDir,
     filename: 'CloudFormation.js',
-    path: outDir
+
   },
-  // Tells webpack to not to bundle since we're running CDK locallys
+  // Tells webpack to not to bundle since we're running CDK locally
   externals: [nodeExternals()]
 };
 
-export default [stackConfig, httpHandlerConfig, streamHandlerConfig];
+export default [stackConfig,
+  handlerConfig(sharedConfig, 'stream-handler'),
+  handlerConfig(sharedConfig, 'http-handler'),
+];
