@@ -3,28 +3,23 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import { SubnetType } from '@aws-cdk/aws-ec2';
 import * as iam from '@aws-cdk/aws-iam';
 import * as es from '@aws-cdk/aws-elasticsearch';
+import { Ec2NetworkPops } from './model';
 
-export interface ElasticsearchClusterProps {
+export interface ElasticsearchConstructProps {
   //Add if needed
 }
 
-export interface ElasticsearchNetworkConfig {
-  vpc: ec2.VpcNetwork;
-  vpcPlacement: ec2.VpcPlacementStrategy;
-  securityGroup: ec2.SecurityGroup;
-}
+export class ElasticsearchConstruct extends cdk.Construct {
 
-export class ElasticsearchCluster extends cdk.Construct {
+  readonly network: Ec2NetworkPops;
 
-  readonly networkConfig: ElasticsearchNetworkConfig;
-
-  private readonly elasticsearch: es.CfnDomain;
-
-  get domainEndpoint(): string {
+  get endpoint(): string {
     return this.elasticsearch.domainEndpoint
   }
 
-  constructor(parent: cdk.Construct, id: string, props?: ElasticsearchClusterProps) {
+  private readonly elasticsearch: es.CfnDomain;
+
+  constructor(parent: cdk.Construct, id: string, props?: ElasticsearchConstructProps) {
     super(parent, id);
 
     const vpcId = 'Vpc';
@@ -33,7 +28,7 @@ export class ElasticsearchCluster extends cdk.Construct {
     const vpc = new ec2.VpcNetwork(this, vpcId, {
       cidr: '10.0.0.0/16',
       natGateways: 1,
-      natGatewayPlacement: {subnetName: 'PublicSubnet'},
+      natGatewayPlacement: {subnetName: 'ElasticsearchSubnet'},
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -110,8 +105,11 @@ export class ElasticsearchCluster extends cdk.Construct {
 
     //
     this.elasticsearch = elasticsearch;
-    this.networkConfig = {
-      vpc, vpcPlacement, securityGroup: clientSecurityGroup
+
+    this.network = {
+      securityGroup: clientSecurityGroup,
+      vpcPlacement,
+      vpc,
     };
   }
 }
