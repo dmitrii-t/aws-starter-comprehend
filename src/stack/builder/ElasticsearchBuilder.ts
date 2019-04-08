@@ -1,34 +1,42 @@
 import * as cdk from '@aws-cdk/cdk';
+import * as kinesis from '@aws-cdk/aws-kinesis';
+import { Ec2NetworkPops } from './model';
+import * as lambda from '@aws-cdk/aws-lambda';
+import * as event_sources from '@aws-cdk/aws-lambda-event-sources';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import { SubnetType } from '@aws-cdk/aws-ec2';
-import * as iam from '@aws-cdk/aws-iam';
 import * as es from '@aws-cdk/aws-elasticsearch';
-import { Ec2NetworkPops } from './model';
+import * as iam from '@aws-cdk/aws-iam';
+import { Builder } from './Builder';
 
-export interface ElasticsearchConstructProps {
-  //Add if needed
-}
 
-export class ElasticsearchConstruct extends cdk.Construct {
+export class ElasticsearchBuilder extends Builder<es.CfnDomain> {
 
-  readonly network: Ec2NetworkPops;
+  private network: Ec2NetworkPops;
 
-  get endpoint(): string {
-    return this.elasticsearch.domainEndpoint
+  private endpoint: string;
+
+  connectInputStream(inputStream: kinesis.Stream): ElasticsearchBuilder {
+    this.postConstructs.push(() => {
+      //
+      const props: StreamConnectorProps = {
+        endpoint: this.endpoint,
+        network: this.network,
+        stream: inputStream
+      };
+      new StreamConnectorConstruct(this.scope, 'StreamConnector', props)
+    });
+    return this;
   }
 
-  private readonly elasticsearch: es.CfnDomain;
-
-  constructor(parent: cdk.Construct, id: string, props?: ElasticsearchConstructProps) {
-    super(parent, id);
-
+  protected construct() {
     const vpcId = 'Vpc';
 
     // Network configuration
-    const vpc = new ec2.VpcNetwork(this, vpcId, {
+    const vpc = new ec2.VpcNetwork(this.scope, vpcId, {
       cidr: '10.0.0.0/16',
       natGateways: 1,
-      natGatewayPlacement: {subnetName: 'ElasticsearchSubnet'},
+      natGatewayPlacement: {subnetName: 'PublicSubnet'},
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -37,7 +45,7 @@ export class ElasticsearchConstruct extends cdk.Construct {
         },
         {
           cidrMask: 24,
-          name: 'LambdaSubnet',
+          name: 'ClientSubnet',
           subnetType: SubnetType.Private,
         },
         {
@@ -48,12 +56,12 @@ export class ElasticsearchConstruct extends cdk.Construct {
       ],
     });
 
-    const vpcPlacement: ec2.VpcPlacementStrategy = {subnetName: 'LambdaSubnet'};
+    const vpcPlacement: ec2.VpcPlacementStrategy = {subnetName: 'ClientSubnet'};
 
     const elasticsearchSubnet = vpc.subnets({subnetName: 'ElasticsearchSubnet'})[0];
 
     // Public SG allows http access from the Internet
-    const publicSecurityGroup = new ec2.SecurityGroup(this, 'PublicSG', {
+    const publicSecurityGroup = new ec2.SecurityGroup(this.scope, 'PublicSG', {
       vpc: vpc,
       description: 'Public security group with http access',
       allowAllOutbound: true
@@ -61,14 +69,14 @@ export class ElasticsearchConstruct extends cdk.Construct {
     publicSecurityGroup.addIngressRule(new ec2.AnyIPv4(), new ec2.TcpPort(80));
 
     //
-    const clientSecurityGroup = new ec2.SecurityGroup(this, 'LambdaSG', {
+    const clientSecurityGroup = new ec2.SecurityGroup(this.scope, 'ClientSG', {
       vpc: vpc,
       description: 'Private security group for to allow lambdas to access VPC resources',
       allowAllOutbound: true
     });
 
     // Elasticsearch security group
-    const elasticsearchSecurityGroup = new ec2.SecurityGroup(this, 'ElasticsearchSG', {
+    const elasticsearchSecurityGroup = new ec2.SecurityGroup(this.scope, 'ElasticsearchSG', {
       vpc: vpc,
       description: 'Private security group with limited access from public and lambda groups only'
     });
@@ -80,7 +88,7 @@ export class ElasticsearchConstruct extends cdk.Construct {
     //   awsServiceName: 'es.amazonaws.com'
     // });
 
-    const elasticsearch = new es.CfnDomain(this, `Elasticsearch`, {
+    this.instance = new es.CfnDomain(this.scope, this.name || 'Elasticsearch', {
       elasticsearchVersion: '6.4',
       accessPolicies: new iam.PolicyDocument()
         .addStatement(new iam.PolicyStatement()
@@ -103,14 +111,47 @@ export class ElasticsearchConstruct extends cdk.Construct {
       }
     });
 
-    //
-    this.elasticsearch = elasticsearch;
-
     this.network = {
       securityGroup: clientSecurityGroup,
       vpcPlacement,
-      vpc,
-    };
+      vpc
+    }
   }
 }
 
+interface StreamConnectorProps {
+  endpoint: string
+  network: Ec2NetworkPops
+  stream: kinesis.Stream
+}
+
+class StreamConnectorConstruct extends cdk.Construct {
+
+  constructor(scope: cdk.Construct, id: string, props: StreamConnectorProps) {
+    super(scope, id);
+
+    const {
+      endpoint,
+      network,
+      stream
+    } = props;
+
+    // Defines message stream handler
+    const streamConnector = new lambda.Function(this, 'StreamConnectorFunction', {
+      runtime: lambda.Runtime.NodeJS810,
+      handler: 'index.handler',
+      code: lambda.Code.asset('./bin/stream-connector'),
+      ...network,
+      environment: {
+        elasticsearch_endpoint: endpoint
+      }
+    });
+
+    streamConnector.addEventSource(new event_sources.KinesisEventSource(stream, {
+      startingPosition: lambda.StartingPosition.TrimHorizon
+    }));
+
+    // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
+    stream.grantRead(streamConnector.role);
+  }
+}

@@ -31,13 +31,17 @@ export async function handler(httpEvent: any) {
   console.info(`File handler (${process.env['LAMBDA_TASK_ROOT']}) is running with envs\n${JSON.stringify(process.env)}`);
 
   // Reads Env vars
-  const streamName = process.env.message_stream as string;
+  const outputStream = process.env.output_stream as string;
 
   // Reads request
   const file = JSON.parse(httpEvent['body']) as PostFileRequest;
   const text = new Buffer(file.data).toString('utf8');
 
-  await KinesisUtil.asyncPutRecords(streamName, toDataRecords(text), toPutRecordsRequestEntries);
+  const records = text.split(/(?:\r\n|\r|\n)/g)
+    .filter((line: string) => line.length > 0)
+    .map((text: string, lineNo: number) => ({text, lineNo} as DataRecord));
+
+  await KinesisUtil.asyncPutRecords(outputStream, records, toPutRecordsRequestEntries);
   console.info(`Successfully processed file ${file.name}`);
 
   // Success
@@ -46,20 +50,7 @@ export async function handler(httpEvent: any) {
     statusCode: 200,
     headers: {...CORS_HTTP_HEADERS},
     body: ''
-  };
-}
-
-/**
- * Sprint text to lines and maps the lines to send to the data stream
- * @param text
- */
-export function toDataRecords(text: string): DataRecord[] {
-  const lines = text.split(/(?:\r\n|\r|\n)/g);
-
-  // Formats lines to send to the data stream
-  return lines
-    .filter((line: string) => line.length > 0)
-    .map((text: string, lineNo: number) => ({text, lineNo} as DataRecord))
+  } as PostFileResponse;
 }
 
 export function toPutRecordsRequestEntries(record: DataRecord): PutRecordsRequestEntry {

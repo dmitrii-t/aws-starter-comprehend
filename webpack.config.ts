@@ -60,6 +60,7 @@ const stackConfig: webpack.Configuration = {
 };
 
 export default [stackConfig,
+  handlerConfig(sharedConfig, 'stream-connector'),
   handlerConfig(sharedConfig, 'stream-handler'),
   handlerConfig(sharedConfig, 'http-handler'),
 ];
