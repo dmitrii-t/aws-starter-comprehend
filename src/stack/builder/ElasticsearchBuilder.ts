@@ -131,9 +131,7 @@ class StreamConnectorConstruct extends cdk.Construct {
     super(scope, id);
 
     const {
-      endpoint,
-      network,
-      stream
+      endpoint, network, stream
     } = props;
 
     // Defines message stream handler
