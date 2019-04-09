@@ -1,6 +1,5 @@
 it('ensures data records are parsed', () => {
-  //Add tests here is needed
-  const parse = require('./index').parse;
+  const parse = require('./index').parseStreamEvent;
   const event = {
     'Records': [
       {

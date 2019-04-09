@@ -1,4 +1,5 @@
-import * as AwsKinesisUtil from '../../util/kinesis';
+import * as AwsKinesisUtil from '../../util/aws/kinesis';
+import { TextLine } from '../../model';
 //import axios from 'axios';
 
 
@@ -12,7 +13,7 @@ export async function handler(streamEvent: any) {
   const elasticsearch = process.env.elasticsearch_endpoint as string;
 
   // Submits message data to Elasticsearch
-  const records = AwsKinesisUtil.parse(streamEvent, (data: string) => JSON.parse(data));
+  const records = AwsKinesisUtil.parseStreamEvent<TextLine>(streamEvent);
 
   // await axios.post(elasticsearch, records, {headers});
   console.info(`received ${records.length} records to submit to elasticsearch:\n${JSON.stringify(records)}`)

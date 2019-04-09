@@ -1,6 +1,6 @@
-import * as AwsKinesisUtil from '../../util/kinesis';
-import * as AwsComprehendUtil from '../../util/comprehend';
-import { DataRecord } from '../../model';
+import * as AwsKinesisUtil from '../../util/aws/kinesis';
+import * as AwsComprehendUtil from '../../util/aws/comprehend';
+import { TextLine } from '../../model';
 import { toPutRecordsRequestEntries } from '../http-handler';
 
 export async function handler(streamEvent: any) {
@@ -12,17 +12,16 @@ export async function handler(streamEvent: any) {
   const outputStream = process.env.output_stream as string;
 
   // Parses data record
-  const records = AwsKinesisUtil.parse(streamEvent, (data: string) =>
-    ({...JSON.parse(data), ...{timestamp: new Date().getTime()}}) as DataRecord);
+  const records = AwsKinesisUtil.parseStreamEvent<TextLine>(streamEvent);
+  const sentimented = await Promise.all(records.map((record) => withSentiment(record)));
 
   // Blocks execution to get the results
-  const processed = await Promise.all<DataRecord>(records.map((record) => withDetectedSentiment(record)));
-  await AwsKinesisUtil.asyncPutRecords(outputStream, processed, toPutRecordsRequestEntries);
-
-  console.info(`Records:\n${JSON.stringify(processed)}`)
+  await AwsKinesisUtil.asyncPutRecords(outputStream, sentimented, toPutRecordsRequestEntries);
+  console.info(`processed ${sentimented.length} records:\n${JSON.stringify(sentimented)}`)
 }
 
-async function withDetectedSentiment(record: DataRecord): Promise<DataRecord> {
+async function withSentiment(record: TextLine): Promise<TextLine> {
   const sentiment = await AwsComprehendUtil.asyncDetectSentiment(record.text);
-  return ({...record, ...{sentiment}}) as DataRecord
+  const timestamp = new Date().getTime();
+  return ({...record, sentiment, timestamp}) as TextLine
 }

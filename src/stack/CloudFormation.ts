@@ -24,8 +24,10 @@ class AwsStarterComprehendStack extends cdk.Stack {
         output_stream: sourceStream.streamName
       }
     });
+    // Grants write permission to the source stream
+    sourceStream.grantWrite(httpHandler.role);
 
-    const apigateway = new ApiGatewayBuilder(this, 'ApiGateway')
+    const apiGateway = new ApiGatewayBuilder(this, 'ApiGateway')
       .root().addCors('*', ['POST'])
       .root().addLambdaHandler('POST', httpHandler)
       .build();
@@ -44,13 +46,14 @@ class AwsStarterComprehendStack extends cdk.Stack {
     }));
     // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
     sourceStream.grantRead(streamHandler.role);
+    resultStream.grantWrite(streamHandler.role);
 
     // Adds permission comprehend:DetectSentiment
     streamHandler.role!.addToPolicy(new iam.PolicyStatement()
       .addAllResources()
       .addActions('comprehend:DetectSentiment'));
 
-    const elasticsearch = new ElasticsearchBuilder(this, 'ContentSearch')
+    const elasticsearch = new ElasticsearchBuilder(this, 'TextLineSearch')
       .connectInputStream(resultStream)
       .build();
   }

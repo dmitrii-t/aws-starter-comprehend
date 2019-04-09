@@ -1,6 +1,7 @@
-import { batch } from '../batch.util';
+import { batch } from '../../batch.util';
 import { PutRecordsRequestEntry } from 'aws-sdk/clients/kinesis';
 import * as aws from 'aws-sdk';
+import { decodeBase64 } from '../../base64.util';
 
 // AWS defined limitation
 const KINESIS_PUT_RECORDS_BATCH_SIZE = 500;
@@ -37,13 +38,8 @@ export function asyncPutRecords<T>(streamName: string, entries: T[], entryMapper
   return Promise.all(tasks)
 }
 
-export function parse<T>(event: any, parser: (str: string) => T): T[] {
+export function parseStreamEvent<T>(event: any): T[] {
   const records: Array<any> = event['Records'];
-  return records.map(parseData).map(parser)
-}
-
-function parseData(record: any) {
-  const encoded = record['kinesis']['data'];
-  const buff = new Buffer(encoded, 'base64');
-  return buff.toString('utf8');
+  return records.map((record) => decodeBase64(record['kinesis']['data']))
+    .map((str) => JSON.parse(str) as T)
 }

@@ -1,7 +1,8 @@
-import * as crypto from 'crypto';
+import { createHash } from 'crypto';
 import { PutRecordsRequestEntry } from 'aws-sdk/clients/kinesis';
-import { DataRecord } from '../../model';
-import * as KinesisUtil from '../../util/kinesis';
+import { TextLine } from '../../model';
+import * as AwsKinesisUtil from '../../util/aws/kinesis';
+import { decodeBase64 } from '../../util/base64.util';
 
 const CORS_HTTP_HEADERS = {
   'Content-Type': 'application/json',
@@ -27,21 +28,22 @@ interface HttpHeaders {
 
 export async function handler(httpEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-
   console.info(`File handler (${process.env['LAMBDA_TASK_ROOT']}) is running with envs\n${JSON.stringify(process.env)}`);
 
   // Reads Env vars
   const outputStream = process.env.output_stream as string;
 
-  // Reads request
+  // Reads the request
   const file = JSON.parse(httpEvent['body']) as PostFileRequest;
-  const text = new Buffer(file.data).toString('utf8');
+  const text = decodeBase64(file.data);
 
-  const records = text.split(/(?:\r\n|\r|\n)/g)
-    .filter((line: string) => line.length > 0)
-    .map((text: string, lineNo: number) => ({text, lineNo} as DataRecord));
+  //Splits whole file by lines
+  const lines = text.split(/(?:\r\n|\r|\n)/g);
+  const entries = lines.filter((text: string) => text.length > 0)
+    .map((text: string, line: number) => ({text, line} as TextLine));
+  console.info(`Processing file ${file.name} with ${lines.length} lines`);
 
-  await KinesisUtil.asyncPutRecords(outputStream, records, toPutRecordsRequestEntries);
+  await AwsKinesisUtil.asyncPutRecords(outputStream, entries, toPutRecordsRequestEntries);
   console.info(`Successfully processed file ${file.name}`);
 
   // Success
@@ -53,12 +55,12 @@ export async function handler(httpEvent: any) {
   } as PostFileResponse;
 }
 
-export function toPutRecordsRequestEntries(record: DataRecord): PutRecordsRequestEntry {
-  const id = record.lineNo + '-' + record.text;
+export function toPutRecordsRequestEntries(record: TextLine): PutRecordsRequestEntry {
+  const id = record.line + '-' + record.text;
   return {
     Data: JSON.stringify(record),
     // Generates partition keys
-    PartitionKey: crypto.createHash('md5').update(id).digest('hex')
+    PartitionKey: createHash('md5').update(id).digest('hex')
   } as PutRecordsRequestEntry
 }
 

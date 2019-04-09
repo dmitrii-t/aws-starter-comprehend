@@ -1,10 +1,10 @@
 /**
- * Model class DataRecord
+ * Model class TextLine
  */
-export interface DataRecord {
+export interface TextLine {
   filename: string
   timestamp: number
   sentiment: string
-  lineNo: number
+  line: number
   text: string
 }

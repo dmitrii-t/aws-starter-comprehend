@@ -1,23 +1,24 @@
 import * as cdk from '@aws-cdk/cdk';
 
-
 export class Builder<T> {
 
-  beforeConstructs: Function[] = [];
-
-  postConstructs: Function[] = [];
+  protected postConstructs: Function[] = [];
 
   protected instance: T;
 
-  constructor(protected scope: cdk.Construct, protected name:string) {
+  constructor(protected scope: cdk.Construct, protected name: string) {
+  }
+
+  protected beforeConstruct(): void {
   }
 
   protected construct(): void {
-  };
+  }
 
   build(): T {
-    this.beforeConstructs.forEach((builder) => builder.call(this));
+    this.beforeConstruct();
     this.construct();
+    // Runs deferred post construct handlers
     this.postConstructs.forEach((builder) => builder.call(this));
     return this.instance;
   }

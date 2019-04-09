@@ -137,7 +137,7 @@ class StreamConnectorConstruct extends cdk.Construct {
     } = props;
 
     // Defines message stream handler
-    const streamConnector = new lambda.Function(this, 'StreamConnectorFunction', {
+    const streamConnector = new lambda.Function(this, 'StreamConnector', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.handler',
       code: lambda.Code.asset('./bin/stream-connector'),
