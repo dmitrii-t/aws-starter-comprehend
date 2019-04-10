@@ -53,7 +53,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
       .addAllResources()
       .addActions('comprehend:DetectSentiment'));
 
-    const elasticsearch = new ElasticsearchBuilder(this, 'TextLineSearch')
+    const elasticsearch = new ElasticsearchBuilder(this, '', 'text_line')
       .connectInputStream(resultStream)
       .build();
   }

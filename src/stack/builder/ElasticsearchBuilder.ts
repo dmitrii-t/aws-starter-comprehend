@@ -16,10 +16,15 @@ export class ElasticsearchBuilder extends Builder<es.CfnDomain> {
 
   private endpoint: string;
 
+  constructor(scope: cdk.Construct, name: string, private elasticIndex: string) {
+    super(scope, name)
+  }
+
   connectInputStream(inputStream: kinesis.Stream): ElasticsearchBuilder {
     this.postConstructs.push(() => {
       //
       const props: StreamConnectorProps = {
+        elasticIndex: this.elasticIndex,
         endpoint: this.endpoint,
         network: this.network,
         stream: inputStream
@@ -120,6 +125,7 @@ export class ElasticsearchBuilder extends Builder<es.CfnDomain> {
 }
 
 interface StreamConnectorProps {
+  elasticIndex: string
   endpoint: string
   network: Ec2NetworkPops
   stream: kinesis.Stream
@@ -131,7 +137,7 @@ class StreamConnectorConstruct extends cdk.Construct {
     super(scope, id);
 
     const {
-      endpoint, network, stream
+      endpoint, network, stream, elasticIndex
     } = props;
 
     // Defines message stream handler
@@ -141,7 +147,8 @@ class StreamConnectorConstruct extends cdk.Construct {
       code: lambda.Code.asset('./bin/stream-connector'),
       ...network,
       environment: {
-        elasticsearch_endpoint: endpoint
+        elasticsearch_endpoint: endpoint,
+        elasticsearch_index: elasticIndex
       }
     });
 

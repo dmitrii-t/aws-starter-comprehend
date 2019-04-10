@@ -9,7 +9,8 @@
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig.json\" webpack --config webpack.config.ts",
     "watch": "cross-env TS_NODE_PROJECT=\"tsconfig.json\" webpack --config webpack.config.ts --watch --progress",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "main": "node -e 'require(\"./bin/stream-connector/index.js\").main()'"
   },
   "devDependencies": {
     "@aws-cdk/assets": "^0.27.0",
