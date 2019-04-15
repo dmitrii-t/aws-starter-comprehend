@@ -17,7 +17,7 @@
     "inlineSourceMap": false,
 
     "alwaysStrict": true,
-    "experimentalDecorators": false,
+    "experimentalDecorators": true,
 
     "noFallthroughCasesInSwitch": false,
     "noImplicitAny": true,

@@ -26,7 +26,7 @@ interface HttpHeaders {
   [name: string]: string
 }
 
-export async function handler(httpEvent: any) {
+export async function post(postEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
   console.info(`File handler (${process.env['LAMBDA_TASK_ROOT']}) is running with envs\n${JSON.stringify(process.env)}`);
 
@@ -34,7 +34,7 @@ export async function handler(httpEvent: any) {
   const outputStream = process.env.output_stream as string;
 
   // Reads the request
-  const file = JSON.parse(httpEvent['body']) as PostFileRequest;
+  const file = JSON.parse(postEvent['body']) as PostFileRequest;
   const text = decodeBase64(file.data);
 
   //Splits whole file by lines
@@ -55,6 +55,12 @@ export async function handler(httpEvent: any) {
   } as PostFileResponse;
 }
 
+export async function get(getEvent: any) {
+  process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
+  console.info(`Get handler (${process.env['LAMBDA_TASK_ROOT']}) is running with envs\n${JSON.stringify(process.env)}`);
+  //TODO
+}
+
 export function toPutRecordsRequestEntries(record: TextLine): PutRecordsRequestEntry {
   const id = record.line + '-' + record.text;
   return {
@@ -64,3 +70,7 @@ export function toPutRecordsRequestEntries(record: TextLine): PutRecordsRequestE
   } as PutRecordsRequestEntry
 }
 
+
+export function main() {
+
+}
