@@ -1,23 +1,24 @@
-import { ElasticsearchConstruct } from './index';
+import { ElasticsearchConstruct } from '../elasticsearch';
 import * as kinesis from '@aws-cdk/aws-kinesis';
-import { Ec2NetworkPops } from '../';
 import * as cdk from '@aws-cdk/cdk';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as event_sources from '@aws-cdk/aws-lambda-event-sources';
+import { VpcOptions } from '../vpc';
 
 // Adds ElasticsearchConstruct stream methods  declaration
-declare module './index' {
+declare module '../elasticsearch' {
   interface ElasticsearchConstruct {
-    connectInputStream(inputStream: kinesis.Stream, esIndex: string): ElasticsearchConstruct;
+    connectInputStream(inputStream: kinesis.Stream, esIndex: string, vpcOptions: VpcOptions): ElasticsearchConstruct;
   }
 }
 
 export function patchElasticsearchConstructWithInputStream() {
-  ElasticsearchConstruct.prototype.connectInputStream = function (inputStream: kinesis.Stream, index: string): ElasticsearchConstruct {
+  ElasticsearchConstruct.prototype.connectInputStream = function (inputStream: kinesis.Stream, index: string,
+                                                                  vpcOptions: VpcOptions): ElasticsearchConstruct {
 
     const props: StreamConnectorProps = {
       endpoint: this.endpoint,
-      network: this.network,
+      network: vpcOptions,
       stream: inputStream,
       index,
     };
@@ -25,13 +26,6 @@ export function patchElasticsearchConstructWithInputStream() {
     new StreamConnectorConstruct(this, 'StreamConnector', props);
     return this;
   };
-}
-
-interface StreamConnectorProps {
-  endpoint: string
-  network: Ec2NetworkPops
-  stream: kinesis.Stream
-  index: string
 }
 
 class StreamConnectorConstruct extends cdk.Construct {
@@ -63,3 +57,11 @@ class StreamConnectorConstruct extends cdk.Construct {
     stream.grantRead(streamConnector.role);
   }
 }
+
+interface StreamConnectorProps {
+  endpoint: string
+  network: VpcOptions
+  stream: kinesis.Stream
+  index: string
+}
+

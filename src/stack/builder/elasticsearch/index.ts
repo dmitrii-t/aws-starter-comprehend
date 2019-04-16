@@ -1,102 +1,40 @@
 import * as cdk from '@aws-cdk/cdk';
-import { CustomConstruct, Ec2NetworkPops } from '../';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import { SubnetType } from '@aws-cdk/aws-ec2';
+import { CustomConstruct } from '../';
 import * as es from '@aws-cdk/aws-elasticsearch';
+import { CfnDomain } from '@aws-cdk/aws-elasticsearch';
 import * as iam from '@aws-cdk/aws-iam';
+import { VpcOptions } from '../vpc';
+import * as ec2 from '@aws-cdk/aws-ec2';
+import { IVpcSubnet } from '@aws-cdk/aws-ec2';
 
-export interface ElasticsearchConstructProps  {
-  public: boolean
+export interface ElasticsearchConstructProps extends VpcOptions {
 }
-
 
 export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
 
-  network: Ec2NetworkPops;
-
   endpoint: string;
 
-  constructor(scope: cdk.Construct, id: string, props?:ElasticsearchConstructProps) {
+  get elasticsearch(): CfnDomain {
+    return this.instance
+  }
+
+  constructor(scope: cdk.Construct, id: string, props?: ElasticsearchConstructProps) {
     super(scope, id);
 
-    const vpcId = 'Vpc';
-
-    // Network configuration
-    const vpc = new ec2.VpcNetwork(this, vpcId, {
-      cidr: '10.0.0.0/16',
-      natGateways: 1,
-      natGatewayPlacement: {
-        subnetName: 'PublicSubnet'
-      },
-      subnetConfiguration: [
-        {
-          cidrMask: 24,
-          name: 'PublicSubnet',
-          subnetType: SubnetType.Public,
-        },
-        {
-          cidrMask: 24,
-          name: 'ClientSubnet',
-          subnetType: SubnetType.Private,
-        },
-        {
-          cidrMask: 24,
-          name: 'ElasticsearchSubnet',
-          subnetType: SubnetType.Isolated,
-        }
-      ],
-    });
-
-    const vpcPlacement: ec2.VpcPlacementStrategy = {subnetName: 'ClientSubnet'};
-    const publicSubnet = vpc.subnets({subnetName: 'PublicSubnet'})[0];
-    const clientSubnet = vpc.subnets({subnetName: 'ClientSubnet'})[0];
-    const isolatedSubnet = vpc.subnets({subnetName: 'ElasticsearchSubnet'})[0];
-
-    // Public SG allows http access from the Internet
-    const publicSecurityGroup = new ec2.SecurityGroup(this, 'PublicSG', {
-      description: 'Public security group with http access',
-      allowAllOutbound: true,
-      vpc: vpc
-    });
-    publicSecurityGroup.addIngressRule(new ec2.AnyIPv4(), new ec2.TcpPort(80));
-
-    //
-    const clientSecurityGroup = new ec2.SecurityGroup(this, 'ClientSG', {
-      description: 'Private security group to allow Lambda or API Gateway to access isolated resources',
-      allowAllOutbound: true,
-      vpc: vpc
-    });
-
-    // Elasticsearch security group
-    const isolatedSecurityGroup = new ec2.SecurityGroup(this, 'ElasticsearchSG', {
-      description: 'Isolated security group with limited access from lambda group only',
-      vpc: vpc
-    });
-    isolatedSecurityGroup.addIngressRule(clientSecurityGroup, new ec2.TcpPort(80));
-
-    const publicVpcOptions = {
-      subnetIds: [publicSubnet.subnetId],
-      securityGroupIds: [publicSecurityGroup.securityGroupId]
-    };
-
-    const isolatedVpcOptions = {
-      subnetIds: [isolatedSubnet.subnetId],
-      securityGroupIds: [isolatedSecurityGroup.securityGroupId]
-    };
+    // Vpc
+    const vpcOptions: EsVpcOptions | undefined = props && props.vpc
+      ? formatEsVpcOptions(props)
+      : undefined;
 
     // Elasticsearch cluster
-    const serviceLinkedRole = new iam.CfnServiceLinkedRole(this, 'ElasticsearchServiceLinkedRole', {
-      awsServiceName: 'es.amazonaws.com'
-    });
-
     this.instance = new es.CfnDomain(this, id || 'Elasticsearch', {
-      domainName: id,
+      domainName: formatDomainName(id),
       elasticsearchVersion: '6.4',
       accessPolicies: new iam.PolicyDocument()
         .addStatement(new iam.PolicyStatement()
           .addAwsPrincipal('*')
           .addResource('arn:aws:es:*')
-          .addAction('es:ESHttp*')),
+          .addAction('es:*')),
       elasticsearchClusterConfig: {
         // The t2.micro.elasticsearch instance type supports only Elasticsearch 1.5 and 2.3.
         instanceType: 't2.small.elasticsearch',
@@ -107,24 +45,56 @@ export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
         volumeType: 'gp2',
         volumeSize: 10,
       },
-      vpcOptions: props && props.public ? publicVpcOptions : isolatedVpcOptions
+      vpcOptions: vpcOptions ? {
+        subnetIds: [vpcOptions.subnet.subnetId],
+        securityGroupIds: [vpcOptions.securityGroup.securityGroupId]
+      } : undefined
     });
 
-    this.network = {
-      securityGroup: clientSecurityGroup,
-      vpcPlacement,
-      vpc
-    };
+    // Dependencies
+    // const serviceLinkedRole = new iam.CfnServiceLinkedRole(this, 'ElasticsearchServiceLinkedRole', {
+    //   awsServiceName: 'es.amazonaws.com'
+    // });
+    // this.instance.node.addDependency(serviceLinkedRole);
+
+    // Adds Vpc dependency if Vpc is provided
+    if (vpcOptions) {
+      this.instance.node.addDependency(vpcOptions.subnet);
+      this.instance.node.addDependency(vpcOptions.securityGroup)
+    }
 
     // Populates Elasticsearch endpoint for further usage
     this.endpoint = this.instance.domainEndpoint;
 
-    // Outputs public Elasticsearch endpoint
-    if (props && props.public) {
+    // Outputs public Elasticsearch endpoint if Vpc is not provided
+    if (props && props.vpc) {
+    } else {
+      console.info('Vpc options are not provided, Elasticsearch endpoint will be published to the outputs');
       const publicEndpoint = new cdk.CfnOutput(this, 'ElastricsearchDomainEndpoint', {
-        description: 'Elasticsearch Endpoint',
+        description: 'Elasticsearch endpoint',
         value: this.instance.domainEndpoint
       });
     }
   }
+}
+
+interface EsVpcOptions {
+  subnet: IVpcSubnet
+  securityGroup: ec2.SecurityGroup
+}
+
+function formatEsVpcOptions(vpcOptions: VpcOptions): EsVpcOptions {
+  const vpc = vpcOptions.vpc;
+
+  //The only one subnet should be specified
+  const subnet: IVpcSubnet = vpc.subnets(vpcOptions.vpcPlacement)[0];
+  const securityGroup: ec2.SecurityGroup = vpcOptions.securityGroup;
+  return {
+    securityGroup, subnet
+  }
+}
+
+function formatDomainName(value: string): string {
+  //TODO Add camelcase to hyphen separated conversion
+  return value.replace(/\s+/g, '-').toLowerCase()
 }

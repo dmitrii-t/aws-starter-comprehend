@@ -1,8 +1,8 @@
-import { ElasticsearchConstruct } from './index';
-import { RestApiConstruct } from '../restApi';
+import { ElasticsearchConstruct } from '../elasticsearch';
+import { RestApiConstruct } from '../apigateway';
 
 // Adds ElasticsearchConstruct stream methods  declaration
-declare module './index' {
+declare module '../elasticsearch' {
   interface ElasticsearchConstruct {
     exposeRestApis(path: string, apis: string[], props?: ElasticsearchApiProps): ElasticsearchConstruct;
   }

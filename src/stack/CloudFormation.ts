@@ -2,8 +2,9 @@ import 'source-map-support/register';
 import * as cdk from '@aws-cdk/cdk';
 import * as kinesis from '@aws-cdk/aws-kinesis';
 import { ElasticsearchConstruct } from './builder/elasticsearch';
-import { patchElasticsearchConstructWithInputStream } from './builder/elasticsearch/esInputStream'
-import { patchElasticsearchConstructWithExposeRestApis } from './builder/elasticsearch/esRestApi';
+import { patchElasticsearchConstructWithInputStream } from './builder/elasticsearch.input_stream'
+import { patchElasticsearchConstructWithExposeRestApis } from './builder/elasticsearch.gateway';
+import { isolatedPlacement, VpcConstruct } from './builder/vpc';
 
 
 class AwsStarterComprehendStack extends cdk.Stack {
@@ -58,12 +59,21 @@ class AwsStarterComprehendStack extends cdk.Stack {
     patchElasticsearchConstructWithInputStream();
     patchElasticsearchConstructWithExposeRestApis();
 
-    const elasticsearch = new ElasticsearchConstruct(this, 'ContextSearch', {public: true})
-      .connectInputStream(resultStream, 'text_line')
-      // .exposeRestApis('text_line', ['_search'], {cors: {origin: '*'}})
+
+    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc');
+
+    const elasticsearch = new ElasticsearchConstruct(this, 'ContextSearch', {
+      securityGroup: vpcConstruct.isolatedSecurityGroup,
+      vpcPlacement: isolatedPlacement,
+      vpc: vpcConstruct.vpc
+    })
+    // .connectInputStream(resultStream, 'text_line', {
+    //   securityGroup: vpcConstruct.isolatedSecurityGroup,
+    //   vpcPlacement: isolatedPlacement,
+    //   vpc: vpcConstruct.vpc
+    // })
+    // .exposeRestApis('text_line', ['_search'], {cors: {origin: '*'}})
       .getInstance();
-
-
   }
 }
 
