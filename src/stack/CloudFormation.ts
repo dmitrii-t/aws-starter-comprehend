@@ -1,10 +1,10 @@
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/cdk';
 import * as kinesis from '@aws-cdk/aws-kinesis';
-import { ElasticsearchConstruct } from './builder/elasticsearch';
-import { patchElasticsearchConstructWithInputStream } from './builder/elasticsearch.input_stream'
-import { patchElasticsearchConstructWithExposeRestApis } from './builder/elasticsearch.gateway';
-import { isolatedPlacement, VpcConstruct } from './builder/vpc';
+import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch';
+import { patchElasticsearchConstructWithInputStream } from './custom-stack-constructs/elasticsearch.input_stream'
+import { patchElasticsearchConstructWithExposeRestApis } from './custom-stack-constructs/elasticsearch.gateway';
+import { isolatedPlacement, VpcConstruct } from './custom-stack-constructs/vpc';
 
 
 class AwsStarterComprehendStack extends cdk.Stack {

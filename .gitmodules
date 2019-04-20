@@ -1,0 +1,3 @@
+[submodule "src/stack/custom-stack-constructs"]
+	path = src/stack/custom-stack-constructs
+	url = git@github.com:dtcimbal/custom-stack-constructs.git
