@@ -1,11 +1,12 @@
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/cdk';
 import * as kinesis from '@aws-cdk/aws-kinesis';
+import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.input_stream'
+import { patchElasticsearchConstructWithApiGateway } from './custom-stack-constructs/elasticsearch.gateway';
+import { VpcConstruct } from './custom-stack-constructs/vpc';
+import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.bastion';
+import * as ec2 from '@aws-cdk/aws-ec2';
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch';
-import { patchElasticsearchConstructWithInputStream } from './custom-stack-constructs/elasticsearch.input_stream'
-import { patchElasticsearchConstructWithExposeRestApis } from './custom-stack-constructs/elasticsearch.gateway';
-import { isolatedPlacement, VpcConstruct } from './custom-stack-constructs/vpc';
-
 
 class AwsStarterComprehendStack extends cdk.Stack {
 
@@ -56,24 +57,29 @@ class AwsStarterComprehendStack extends cdk.Stack {
     //   .addActions('comprehend:DetectSentiment'));
 
     //
-    patchElasticsearchConstructWithInputStream();
-    patchElasticsearchConstructWithExposeRestApis();
+    patchElasticsearchConstructWithDeliveryStream();
+    patchElasticsearchConstructWithApiGateway();
+    patchVpcConstructWithBastion();
 
+    //
+    const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
 
     const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc');
+    vpcConstruct.withBastion('Bastion', {
+      imageId: bastionImage.imageId,
+      instanceType: 't2.micro',
+      keyName: 'dtcimbal.aws.key.pair'
+    });
 
-    const elasticsearch = new ElasticsearchConstruct(this, 'ContextSearch', {
-      securityGroup: vpcConstruct.isolatedSecurityGroup,
-      vpcPlacement: isolatedPlacement,
-      vpc: vpcConstruct.vpc
+    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {
+      ...vpcConstruct.privateVpcPlacement
     })
-    // .connectInputStream(resultStream, 'text_line', {
+      .withApiGateway('text_line', ['_search'], {cors: {origin: '*'}})
+    // .withDeliveryStream(resultStream, 'text_line', {
     //   securityGroup: vpcConstruct.isolatedSecurityGroup,
-    //   vpcPlacement: isolatedPlacement,
+    //   vpcPlacementStrategy: isolatedPlacementStrategy,
     //   vpc: vpcConstruct.vpc
     // })
-    // .exposeRestApis('text_line', ['_search'], {cors: {origin: '*'}})
-      .getInstance();
   }
 }
 
