@@ -1,12 +1,14 @@
 import 'source-map-support/register';
+import * as ec2 from '@aws-cdk/aws-ec2'
 import * as cdk from '@aws-cdk/cdk';
 import * as kinesis from '@aws-cdk/aws-kinesis';
 import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.input_stream'
 import { patchElasticsearchConstructWithApiGateway } from './custom-stack-constructs/elasticsearch.gateway';
 import { VpcConstruct } from './custom-stack-constructs/vpc';
 import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.bastion';
-import * as ec2 from '@aws-cdk/aws-ec2';
+import { patchVpcConstructWithVpcEndpoint } from './custom-stack-constructs/vpc.link';
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch';
+
 
 class AwsStarterComprehendStack extends cdk.Stack {
 
@@ -59,22 +61,27 @@ class AwsStarterComprehendStack extends cdk.Stack {
     //
     patchElasticsearchConstructWithDeliveryStream();
     patchElasticsearchConstructWithApiGateway();
+    patchVpcConstructWithVpcEndpoint();
     patchVpcConstructWithBastion();
 
     //
     const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
 
-    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc');
-    vpcConstruct.withBastion('Bastion', {
-      imageId: bastionImage.imageId,
-      instanceType: 't2.micro',
-      keyName: 'dtcimbal.aws.key.pair'
-    });
+    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc')
+      .withPrivateVpcLink()
+      .withBastion('Bastion', {
+        imageId: bastionImage.imageId,
+        instanceType: 't2.micro',
+        keyName: 'dtcimbal.aws.key.pair'
+      });
 
-    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {
-      ...vpcConstruct.privateVpcPlacement
-    })
-      .withApiGateway('text_line', ['_search'], {cors: {origin: '*'}})
+    //
+    const vpcLink = vpcConstruct.privateVpcLink;
+
+    //
+    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {...vpcConstruct.privateVpcPlacement})
+    //TODO add {proxy+} integration
+      .withApiGateway('ANY', '/', '/_search', {vpcLink, cors: {origin: '*'}})
     // .withDeliveryStream(resultStream, 'text_line', {
     //   securityGroup: vpcConstruct.isolatedSecurityGroup,
     //   vpcPlacementStrategy: isolatedPlacementStrategy,

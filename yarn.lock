@@ -107,7 +107,7 @@
     "@aws-cdk/cdk" "^0.26.0"
     "@aws-cdk/cx-api" "^0.26.0"
 
-"@aws-cdk/aws-elasticloadbalancingv2@^0.26.0":
+"@aws-cdk/aws-elasticloadbalancingv2@0.26.0", "@aws-cdk/aws-elasticloadbalancingv2@^0.26.0":
   version "0.26.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-elasticloadbalancingv2/-/aws-elasticloadbalancingv2-0.26.0.tgz#4c2aec70b3ee9b80d99c195c85a56a1110fc3102"
   dependencies:
