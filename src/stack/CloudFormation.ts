@@ -65,18 +65,18 @@ class AwsStarterComprehendStack extends cdk.Stack {
     patchVpcConstructWithVpcEndpoint();
     patchVpcConstructWithBastion();
 
-    //
-    // const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
 
     const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc');
 
-    // vpcConstruct.withEc2Instance('Bastion', vpcConstruct.publicVpcPlacement, {
-    //     imageId: bastionImage.imageId,
-    //     instanceType: 't2.micro',
-    //     keyName: 'dtcimbal.aws.key.pair'
-    //   });
+    // Bastion instances
+    const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
+    vpcConstruct.withEc2Instance('Bastion', vpcConstruct.publicVpcPlacement, {
+        imageId: bastionImage.imageId,
+        instanceType: 't2.micro',
+        keyName: 'dtcimbal.aws.key.pair'
+      });
 
-    //
+    // Elasticsearch
     const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {
       ...vpcConstruct.privateVpcPlacement
     });
