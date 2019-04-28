@@ -79,14 +79,9 @@ class AwsStarterComprehendStack extends cdk.Stack {
     });
 
     // Elasticsearch
-    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {
-      ...vpcConstruct.privateVpcPlacement
-    });
-    // .withDeliveryStream(resultStream, 'text_line', {
-    //   securityGroup: vpcConstruct.isolatedSecurityGroup,
-    //   vpcPlacementStrategy: isolatedPlacementStrategy,
-    //   vpc: vpcConstruct.vpc
-    // })
+    const elasticsearchConstruct =
+      new ElasticsearchConstruct(this, 'ContextSearch', {...vpcConstruct.privateVpcPlacement})
+        .withDeliveryStream(resultStream, 'text_line', {...vpcConstruct.privateVpcPlacement});
 
     const proxyInitTmpl = `
 #!/bin/bash
