@@ -1,13 +1,14 @@
 import 'source-map-support/register';
 import * as ec2 from '@aws-cdk/aws-ec2'
 import * as cdk from '@aws-cdk/cdk';
-import * as kinesis from '@aws-cdk/aws-kinesis';
+import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
 import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.input_stream'
 import { patchElasticsearchConstructWithApiGateway } from './custom-stack-constructs/elasticsearch.gateway';
 import { VpcConstruct } from './custom-stack-constructs/vpc';
 import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.bastion';
 import { patchVpcConstructWithVpcEndpoint } from './custom-stack-constructs/vpc.link';
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch';
+import * as fs from 'fs';
 
 
 class AwsStarterComprehendStack extends cdk.Stack {
@@ -15,8 +16,8 @@ class AwsStarterComprehendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const sourceStream = new kinesis.Stream(this, 'SourceStream');
-    const resultStream = new kinesis.Stream(this, 'ResultStream');
+    // const sourceStream = new kinesis.Stream(this, 'SourceStream');
+    // const resultStream = new kinesis.Stream(this, 'ResultStream');
 
     // Defines s3 file handler which populates file contents to the data stream
     // const postHandler = new lambda.Function(this, 'HttpHandler', {
@@ -65,28 +66,63 @@ class AwsStarterComprehendStack extends cdk.Stack {
     patchVpcConstructWithBastion();
 
     //
-    const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
+    // const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
 
-    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc')
-      .withPrivateVpcLink()
-      .withBastion('Bastion', {
-        imageId: bastionImage.imageId,
-        instanceType: 't2.micro',
-        keyName: 'dtcimbal.aws.key.pair'
-      });
+    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc');
 
-    //
-    const vpcLink = vpcConstruct.privateVpcLink;
+    // vpcConstruct.withEc2Instance('Bastion', vpcConstruct.publicVpcPlacement, {
+    //     imageId: bastionImage.imageId,
+    //     instanceType: 't2.micro',
+    //     keyName: 'dtcimbal.aws.key.pair'
+    //   });
 
     //
-    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {...vpcConstruct.privateVpcPlacement})
-    //TODO add {proxy+} integration
-      .withApiGateway('ANY', '/', '/_search', {vpcLink, cors: {origin: '*'}})
+    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', {
+      ...vpcConstruct.privateVpcPlacement
+    });
     // .withDeliveryStream(resultStream, 'text_line', {
     //   securityGroup: vpcConstruct.isolatedSecurityGroup,
     //   vpcPlacementStrategy: isolatedPlacementStrategy,
     //   vpc: vpcConstruct.vpc
     // })
+
+    const proxyInitTmpl = `
+#!/bin/bash
+
+yum install nginx
+echo "server {
+    listen 80;
+    location / {
+        proxy_pass \${ElasticsearchDomainEndpoint}/_search;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \\$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \\$host;
+        proxy_cache_bypass \\$http_upgrade;
+     }
+}" > /etc/nginx/sites-available/default
+
+service nginx start
+chkconfig nginx on
+    `;
+    const proxyImage = new ec2.AmazonLinuxImage().getImage(this);
+    const proxyInit = cdk.Fn.sub(proxyInitTmpl, {
+      ElasticsearchDomainEndpoint: elasticsearchConstruct.endpoint
+    });
+
+    vpcConstruct.withEc2Instance('ElasticsearchProxy', vpcConstruct.privateVpcPlacement, {
+      imageId: proxyImage.imageId,
+      instanceType: 't2.micro',
+      userData: cdk.Fn.base64(proxyInit)
+    });
+
+    const instances = vpcConstruct.findAllEc2Instances('ElasticsearchProxy');
+    const targets = instances.map(it => new elbv2.InstanceTarget(it.instanceId));
+    const vpcLink = vpcConstruct.withPrivateVpcLink('PrivateLink', targets).privateVpcLink;
+    elasticsearchConstruct.withPrivatelyIntegratedApiGateway('ANY', '/', '/_search', {
+      cors: {origin: '*'},
+      vpcLink
+    });
   }
 }
 
