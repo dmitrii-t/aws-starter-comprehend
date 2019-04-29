@@ -1,8 +1,8 @@
 # AWS Starter Comprehend
-The project is a serverless application which utilizes S3, Lambda, Kinesis Data Streams, 
-Comprehend, Elasticsearch and Cloud Development Kit to handle text file, stream lines 
-from that file to Kinesis data stream, complete sentiment analysis for each line with Comprehend 
-and persist the results to Elasticsearch for further analysis. 
+The project is a serverless application which utilizes Lambda, Kinesis, API Gateway, 
+Comprehend, Elasticsearch, Cloud Development Kit and CloudFormation to handle 
+manually entered text lines, stream them to Kinesis to complete sentiment analysis over each line
+with AWS Comprehend and persist the line and it's sentiment to Elasticsearch for further aggregation. 
 
 # Useful commands
 
