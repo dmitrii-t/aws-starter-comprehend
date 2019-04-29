@@ -5,7 +5,7 @@ import * as cdk from '@aws-cdk/cdk';
 
 declare module '../vpc' {
   interface VpcConstruct {
-    withEc2Instance(id: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct;
+    withEc2Instance(name: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct;
 
     findAllEc2Instances(name: string): CfnInstance[];
 

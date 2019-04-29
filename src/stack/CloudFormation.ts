@@ -5,7 +5,7 @@ import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2'
 import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.input_stream'
 import { patchElasticsearchConstructWithApiGateway } from './custom-stack-constructs/elasticsearch.gateway'
 import { VpcConstruct } from './custom-stack-constructs/vpc'
-import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.bastion'
+import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.ec2'
 import { patchVpcConstructWithVpcEndpoint } from './custom-stack-constructs/vpc.link'
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch'
 import * as kinesis from '@aws-cdk/aws-kinesis'
@@ -68,22 +68,22 @@ class AwsStarterComprehendStack extends cdk.Stack {
       .addAllResources()
       .addActions('comprehend:DetectSentiment'));
 
-    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc');
+    const amazonLinuxImage = new ec2.AmazonLinuxImage().getImage(this);
+    const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc', {maxAZs: 1});
 
     // Bastion instances
-    const bastionImage = new ec2.AmazonLinuxImage().getImage(this);
-    vpcConstruct.withEc2Instance('Bastion', vpcConstruct.publicVpcPlacement, {
-      imageId: bastionImage.imageId,
+    vpcConstruct.withEc2Instance('Bastion', vpcConstruct.bastionVpcPlacement, {
+      imageId: amazonLinuxImage.imageId,
       instanceType: 't2.micro',
       keyName: 'dtcimbal.aws.key.pair'
     });
 
     // Elasticsearch
     const elasticsearchConstruct =
-      new ElasticsearchConstruct(this, 'ContextSearch', {...vpcConstruct.privateVpcPlacement})
-        .withDeliveryStream(resultStream, 'text_line', {...vpcConstruct.privateVpcPlacement});
+      new ElasticsearchConstruct(this, 'ContextSearch', vpcConstruct.privateVpcPlacement)
+        .withDeliveryStream(resultStream, 'text_line', vpcConstruct.privateVpcPlacement);
 
-    const proxyInitTmpl = `
+    const proxyInitTemplate = `
 #!/bin/bash
 
 yum install nginx
@@ -102,13 +102,13 @@ echo "server {
 service nginx start
 chkconfig nginx on
     `;
-    const proxyImage = new ec2.AmazonLinuxImage().getImage(this);
-    const proxyInit = cdk.Fn.sub(proxyInitTmpl, {
+
+    const proxyInit = cdk.Fn.sub(proxyInitTemplate, {
       ElasticsearchDomainEndpoint: elasticsearchConstruct.endpoint
     });
 
-    vpcConstruct.withEc2Instance('ElasticsearchProxy', vpcConstruct.privateVpcPlacement, {
-      imageId: proxyImage.imageId,
+    vpcConstruct.withEc2Instance('ElasticsearchProxy', vpcConstruct.publicVpcPlacement, {
+      imageId: amazonLinuxImage.imageId,
       instanceType: 't2.micro',
       userData: cdk.Fn.base64(proxyInit)
     });

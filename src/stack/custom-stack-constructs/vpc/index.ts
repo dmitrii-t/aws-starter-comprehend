@@ -49,6 +49,14 @@ export class VpcConstruct extends CustomConstruct<ec2.VpcNetwork> {
     }
   }
 
+  get bastionVpcPlacement(): VpcPlacement {
+    return {
+      securityGroup: this.bastionSecurityGroup,
+      vpcPlacementStrategy: publicPlacementStrategy,
+      vpc: this.instance
+    }
+  }
+
   get privateVpcPlacement(): VpcPlacement {
     return {
       securityGroup: this.privateSecurityGroup,
@@ -148,7 +156,9 @@ export class VpcConstruct extends CustomConstruct<ec2.VpcNetwork> {
       vpc: this.instance
     });
     this.privateSecurityGroup.addIngressRule(this.publicSecurityGroup, new ec2.TcpPort(80));
+    // Bastion has HTTP and SSH access
     this.privateSecurityGroup.addIngressRule(this.bastionSecurityGroup, new ec2.TcpPort(80));
+    this.privateSecurityGroup.addIngressRule(this.bastionSecurityGroup, new ec2.TcpPort(22));
 
     // Isolated SG
     this.isolatedSecurityGroup = new ec2.SecurityGroup(this, 'IsolatedSG', {
