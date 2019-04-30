@@ -1,3 +1,5 @@
+###### Work in progress...
+
 # AWS Starter Comprehend
 The project is a serverless application which utilizes Lambda, Kinesis, API Gateway, 
 Comprehend, Elasticsearch, Cloud Development Kit and CloudFormation to handle 
