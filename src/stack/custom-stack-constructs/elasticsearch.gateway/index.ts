@@ -46,7 +46,7 @@ export function patchElasticsearchConstructWithApiGateway() {
     }
 
     const resource = restApiConstruct.resource(resourceName);
-    resource.addHttpProxyIntegration(method, this.endpoint + integrationPath, integrationProps);
+    resource.addHttpProxyIntegration(method, 'http://' + this.endpoint + integrationPath, integrationProps);
 
     // Applies provided props
     if (props && props.cors) {

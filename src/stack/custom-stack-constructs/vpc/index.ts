@@ -145,9 +145,10 @@ export class VpcConstruct extends CustomConstruct<ec2.VpcNetwork> {
 
     // Bastion SG
     this.bastionSecurityGroup = new ec2.SecurityGroup(this, 'BastionSG', {
-      description: 'Bastio security group with ssh access only which has access to both private and isolated SGs',
+      description: 'Bastion security group with ssh access only which has access to both private and isolated SGs',
       vpc: this.instance
     });
+    this.bastionSecurityGroup.addIngressRule(new ec2.AnyIPv4(), new ec2.TcpPort(80));
     this.bastionSecurityGroup.addIngressRule(new ec2.AnyIPv4(), new ec2.TcpPort(22));
 
     // Private SG

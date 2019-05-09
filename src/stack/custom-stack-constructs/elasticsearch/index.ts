@@ -22,7 +22,7 @@ export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
 
   get endpoint(): string {
     // Use non-secure http for internal access
-    return 'http://' + this.instance.domainEndpoint;
+    return this.instance.domainEndpoint;
   }
 
   constructor(scope: cdk.Construct, id: string = 'Elasticsearch', props?: ElasticsearchVpcPlacement) {

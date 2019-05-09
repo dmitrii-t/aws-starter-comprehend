@@ -25,7 +25,7 @@ declare module '../vpc' {
     /**
      * The reference to the private VpcLink
      */
-    privateVpcLink: VpcLink
+    vpcLink: VpcLink
   }
 }
 
@@ -52,7 +52,7 @@ export function patchVpcConstructWithVpcEndpoint() {
       targets
     });
 
-    this.privateVpcLink = new apigateway.VpcLink(this, this.id + 'VpcLink', {
+    this.vpcLink = new apigateway.VpcLink(this, this.id + 'VpcLink', {
       targets: [networkBalancer],
       name: vpcLinkName
     });
@@ -60,7 +60,7 @@ export function patchVpcConstructWithVpcEndpoint() {
     //Outputs
     // const vpcLinkId = new cdk.CfnOutput(this, vpcLinkName, {
     //   description: `${vpcLinkName} VCP link id`,
-    //   value: this.privateVpcLink.vpcLinkId
+    //   value: this.vpcLink.vpcLinkId
     // });
 
     return this
