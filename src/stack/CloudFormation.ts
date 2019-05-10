@@ -3,22 +3,17 @@ import * as ec2 from '@aws-cdk/aws-ec2'
 import * as cdk from '@aws-cdk/cdk'
 import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2'
 import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.input_stream'
-import { patchElasticsearchConstructWithApiGateway } from './custom-stack-constructs/elasticsearch.gateway'
 import { VpcConstruct } from './custom-stack-constructs/vpc'
 import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.ec2'
-import { patchVpcConstructWithVpcEndpoint } from './custom-stack-constructs/vpc.link'
+import { patchVpcConstructWithVpcLink } from './custom-stack-constructs/vpc.link'
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch'
-import * as kinesis from '@aws-cdk/aws-kinesis'
-import * as lambda from '@aws-cdk/aws-lambda'
-import { RestApiConstruct } from './custom-stack-constructs/apigateway'
-import * as event_sources from '@aws-cdk/aws-lambda-event-sources'
-import * as iam from '@aws-cdk/aws-iam'
-import * as path from 'path';
+import { ApiGatewayConstruct } from './custom-stack-constructs/apigateway'
+import { patchApiGatewayConstructWithVpcIntegration } from './custom-stack-constructs/apigateway.vpc';
 
 // Patches custom constructs extensions
 patchElasticsearchConstructWithDeliveryStream();
-patchElasticsearchConstructWithApiGateway();
-patchVpcConstructWithVpcEndpoint();
+patchApiGatewayConstructWithVpcIntegration();
+patchVpcConstructWithVpcLink();
 patchVpcConstructWithBastion();
 
 class AwsStarterComprehendStack extends cdk.Stack {
@@ -42,7 +37,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
     // // // Grants write permission to the source stream
     // sourceStream.grantWrite(postHandler.role);
     // //
-    // const restApi = new RestApiConstruct(this, 'RestApi')
+    // const restApi = new ApiGatewayConstruct(this, 'RestApi')
     //   .root().addCors({origin: '*', allowMethods: ['POST']})
     //   .root().addLambdaProxyIntegration('POST', postHandler)
     //   .getInstance();
@@ -73,19 +68,19 @@ class AwsStarterComprehendStack extends cdk.Stack {
     const vpcConstruct = new VpcConstruct(this, 'ContextSearchVpc', {maxAZs: 1});
 
     // Bastion instances
-    vpcConstruct.withEc2Instance('Bastion', vpcConstruct.bastionVpcPlacement, {
-      imageId: amazonLinuxImage.imageId,
-      instanceType: 't2.micro',
-      keyName: 'dtcimbal.aws.key.pair'
-    });
+    // vpcConstruct.withEc2Instance('Bastion', vpcConstruct.bastionVpcPlacement, {
+    //   imageId: amazonLinuxImage.imageId,
+    //   instanceType: 't2.micro',
+    //   keyName: 'dtcimbal.aws.key.pair'
+    // });
 
     // Elasticsearch
-    const elasticsearchConstruct =
-      new ElasticsearchConstruct(this, 'ContextSearch', vpcConstruct.bastionVpcPlacement)
+    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'ContextSearch', vpcConstruct.privateVpcPlacement)
     //     .withDeliveryStream(resultStream, 'text_line', vpcConstruct.privateVpcPlacement)
     ;
 
-    const proxyServerName = 'elasticsearch';
+    // Alias of the elasticsearch cluster used API Gateway
+    const endpoint = elasticsearchConstruct.endpoint;
 
     const proxyInit = cdk.Fn.sub([
       `#cloud-config`,
@@ -97,19 +92,21 @@ class AwsStarterComprehendStack extends cdk.Stack {
       ` - nginx`,
       ``,
       `write_files:`,
-      ` - path: /etc/nginx/conf.d/proxy.config`,
+      ` - path: /etc/nginx/conf.d/proxy.conf`,
       `   permissions: '0644'`,
       `   content: |`,
+      `    server_names_hash_bucket_size 512;`,
       `    server {`,
-      `      listen 80 default_server;`,
-      `      listen [::]:80 default_server;`,
+      `      listen 80;`,
+      `      listen [::]:80;`,
       ``,
-      `      server_name \${serverName}`,
+      `      server_name \${serviceAlias};`,
       ``,
       `      location / {`,
       `        proxy_http_version 1.1;`,
-      `        proxy_pass http:\${elasticsearchDomainEndpoint}/_search/;`,
-      `        proxy_set_header Host \${elasticsearchDomainEndpoint};`,
+      `        proxy_pass http://\${targetEndpoint};`,
+
+      `        proxy_set_header Host \${targetEndpoint};`,
       `        proxy_set_header Connection "Keep-Alive";`,
       `        proxy_set_header Proxy-Connection "Keep-Alive";`,
       `        proxy_set_header Authorization "";`,
@@ -124,21 +121,24 @@ class AwsStarterComprehendStack extends cdk.Stack {
       `#eof`,
       ``,
     ].join('\n'), {
-      elasticsearchDomainEndpoint: elasticsearchConstruct.endpoint,
-      serverName: proxyServerName
+      targetEndpoint: endpoint,
+      serviceAlias: endpoint
     });
 
-    vpcConstruct.withEc2Instance('Proxy', vpcConstruct.bastionVpcPlacement, {
+    vpcConstruct.withEc2Instance('Proxy', vpcConstruct.privateVpcPlacement, {
       imageId: amazonLinuxImage.imageId,
       instanceType: 't2.micro',
       keyName: 'dtcimbal.aws.key.pair',
       userData: cdk.Fn.base64(proxyInit),
     });
 
-    const instances = vpcConstruct.findAllEc2Instances('Proxy');
-    const targets = instances.map(it => new elbv2.InstanceTarget(it.instanceId));
-    const vpcLink = vpcConstruct.withVpcLink('PrivateLink', vpcConstruct.bastionVpcPlacement, targets).vpcLink;
-    elasticsearchConstruct.withPrivatelyIntegratedApiGateway('ANY', '/', '/_search', {
+    // Step #2
+    const targets = vpcConstruct.findAllEc2Instances('Proxy').map(it => new elbv2.InstanceTarget(it.instanceId));
+    const vpcLink = vpcConstruct.withVpcLink('VpcLink', vpcConstruct.privateVpcPlacement, targets).vpcLink;
+
+    const gatewayConstruct = new ApiGatewayConstruct(this, 'ContextSearchApiGateway');
+    gatewayConstruct.node.addDependency(elasticsearchConstruct.instance);
+    gatewayConstruct.withVpcIntegration('ANY', '/', `http://${endpoint}`, {
       cors: {origin: '*'},
       vpcLink
     });

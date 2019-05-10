@@ -22,7 +22,7 @@ export interface CorsProps {
   allowHeaders?: string;
 }
 
-export class RestApiConstruct extends CustomConstruct<apigateway.RestApi> {
+export class ApiGatewayConstruct extends CustomConstruct<apigateway.RestApi> {
 
   private resourceBuilders: { [key: string]: ResourceBuilder } = {};
 
@@ -61,10 +61,10 @@ export class RestApiConstruct extends CustomConstruct<apigateway.RestApi> {
 
 export class ResourceBuilder {
 
-  constructor(private restApiConstruct: RestApiConstruct, private resource: IRestApiResource) {
+  constructor(private restApiConstruct: ApiGatewayConstruct, private resource: IRestApiResource) {
   }
 
-  addCors(props: CorsProps): RestApiConstruct {
+  addCors(props: CorsProps): ApiGatewayConstruct {
     const {
       origin, allowMethods, allowHeaders
     } = props;
@@ -109,7 +109,7 @@ export class ResourceBuilder {
     return this.restApiConstruct;
   }
 
-  addLambdaProxyIntegration(httpMethod: string, handler: lambda.Function, options?: LambdaIntegrationOptions): RestApiConstruct {
+  addLambdaProxyIntegration(httpMethod: string, handler: lambda.Function, options?: LambdaIntegrationOptions): ApiGatewayConstruct {
     const integrationProps: LambdaIntegrationOptions = {
       // True is the default value, just to be explicit
       proxy: true,
@@ -120,7 +120,7 @@ export class ResourceBuilder {
     return this.restApiConstruct;
   }
 
-  addHttpProxyIntegration(httpMethod: string, url: string, integrationProps?: HttpIntegrationProps, methodProps?: MethodOptions): RestApiConstruct {
+  addHttpProxyIntegration(httpMethod: string, url: string, integrationProps?: HttpIntegrationProps, methodProps?: MethodOptions): ApiGatewayConstruct {
     //
     const method: MethodOptions = {
       authorizationType: AuthorizationType.None,

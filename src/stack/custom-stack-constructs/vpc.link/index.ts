@@ -8,6 +8,7 @@ import elbv2 = require('@aws-cdk/aws-elasticloadbalancingv2');
 declare module '../vpc' {
   interface VpcConstruct {
     /**
+     * Creates VPC Link with private placement
      *
      * @param vpcLinkName
      * @param targets
@@ -15,6 +16,7 @@ declare module '../vpc' {
     withPrivateVpcLink(vpcLinkName: string, targets: INetworkLoadBalancerTarget[]): VpcConstruct;
 
     /**
+     * Creates VPC Link with specified placement
      *
      * @param vpcLinkName
      * @param vpcLinkPlacement
@@ -29,7 +31,8 @@ declare module '../vpc' {
   }
 }
 
-export function patchVpcConstructWithVpcEndpoint() {
+export function patchVpcConstructWithVpcLink() {
+
   //
   VpcConstruct.prototype.withPrivateVpcLink = function (vpcLinkName: string, targets: INetworkLoadBalancerTarget[]): VpcConstruct {
     return this.withVpcLink(vpcLinkName, this.privateVpcPlacement, targets);
@@ -38,7 +41,7 @@ export function patchVpcConstructWithVpcEndpoint() {
   //
   VpcConstruct.prototype.withVpcLink = function (vpcLinkName: string, vpcLinkPlacement: VpcPlacement, targets: INetworkLoadBalancerTarget[]): VpcConstruct {
     //
-    const networkBalancer = new elbv2.NetworkLoadBalancer(this, this.id + 'NetworkLoadBalancer', {
+    const networkBalancer = new elbv2.NetworkLoadBalancer(this, vpcLinkName + 'NetworkLoadBalancer', {
       vpc: vpcLinkPlacement.vpc,
       vpcPlacement: vpcLinkPlacement.vpcPlacementStrategy
     });
@@ -52,10 +55,11 @@ export function patchVpcConstructWithVpcEndpoint() {
       targets
     });
 
-    this.vpcLink = new apigateway.VpcLink(this, this.id + 'VpcLink', {
+    this.vpcLink = new apigateway.VpcLink(this, vpcLinkName + 'VpcLink', {
       targets: [networkBalancer],
       name: vpcLinkName
     });
+    this.vpcLink.node.addDependency(networkBalancer);
 
     //Outputs
     // const vpcLinkId = new cdk.CfnOutput(this, vpcLinkName, {
