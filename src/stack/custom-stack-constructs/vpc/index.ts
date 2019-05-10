@@ -155,13 +155,10 @@ export class VpcConstruct extends CustomConstruct<ec2.VpcNetwork> {
       description: 'Private security group to allow private resources to access to isolated resources',
       vpc: this.instance
     });
-    // Permits HTTP  access from public group
-    this.privateSecurityGroup.addIngressRule(this.publicSecurityGroup, new ec2.TcpPort(80));
-    // Permits HTTP and SSH access from bastion group
-    this.privateSecurityGroup.addIngressRule(this.bastionSecurityGroup, new ec2.TcpPort(80));
+    // Permits SSH access from bastion group
     this.privateSecurityGroup.addIngressRule(this.bastionSecurityGroup, new ec2.TcpPort(22));
     // Permits HTTP access inside the group
-    this.privateSecurityGroup.addIngressRule(this.privateSecurityGroup, new ec2.TcpPort(80));
+    this.privateSecurityGroup.addIngressRule(new ec2.AnyIPv4(), new ec2.TcpPort(80));
 
     // Isolated SG
     this.isolatedSecurityGroup = new ec2.SecurityGroup(this, 'IsolatedSG', {
