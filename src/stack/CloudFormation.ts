@@ -13,7 +13,7 @@ import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.ec2'
 import { patchVpcConstructWithVpcLink } from './custom-stack-constructs/vpc.link'
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch'
 import { ApiGatewayConstruct } from './custom-stack-constructs/apigateway'
-import { patchApiGatewayConstructWithVpcIntegration } from './custom-stack-constructs/apigateway.vpc';
+import { patchApiGatewayConstructWithVpcIntegration } from './custom-stack-constructs/apigateway.vpclink';
 
 // Patches custom constructs extensions
 patchElasticsearchConstructWithDeliveryStream();
