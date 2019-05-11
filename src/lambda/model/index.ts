@@ -2,9 +2,10 @@
  * Model class TextLine
  */
 export interface TextLine {
-  filename: string
-  timestamp: number
-  sentiment: string
+  client: string
   line: number
   text: string
+  createdAt: number
+  sentiment?: string
+  updatedAt?: number
 }

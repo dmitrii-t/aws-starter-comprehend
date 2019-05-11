@@ -15,7 +15,7 @@
 </div>
 <script>
     // TODO embed endpoint url
-    var ENDPOINT_URL = "https://mkywp5xub6.execute-api.us-west-2.amazonaws.com/prod/text_line";
+    var ENDPOINT_URL = "https://cgw8x9mdfl.execute-api.us-west-2.amazonaws.com/prod";
 
     // TODO generate with Cognito
     var CLIENT_UUID = uuid();
@@ -53,7 +53,7 @@
                 });
 
                 // Sends the request
-                return fetch(ENDPOINT_URL, {
+                return fetch(ENDPOINT_URL + '/text_lines', {
                     method: 'POST',
                     headers: {
                         "Content-Type": "application/json"

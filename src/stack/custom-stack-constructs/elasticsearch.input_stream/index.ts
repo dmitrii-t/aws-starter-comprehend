@@ -4,11 +4,18 @@ import * as cdk from '@aws-cdk/cdk';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as event_sources from '@aws-cdk/aws-lambda-event-sources';
 import { VpcPlacement } from '../vpc';
+import * as iam from '@aws-cdk/aws-iam';
 
-// Adds ElasticsearchConstruct stream methods  declaration
+export interface DeliveryProps {
+  vpcPlacement: VpcPlacement
+  timeout: number
+  searchIndex: string
+}
+
+// Adds ElasticsearchConstruct stream method declarations
 declare module '../elasticsearch' {
   interface ElasticsearchConstruct {
-    withDeliveryStream(fromStream: kinesis.Stream, esIndex: string, vpcPlacement?: VpcPlacement): ElasticsearchConstruct;
+    withDeliveryStream(fromStream: kinesis.Stream, props: DeliveryProps): ElasticsearchConstruct;
   }
 }
 
@@ -17,18 +24,21 @@ export function patchElasticsearchConstructWithDeliveryStream() {
    * Adds delivery stream to populate messages to the specified ES index
    *
    * @param fromStream
-   * @param index
-   * @param vpcPlacement
+   * @param props
    */
-  ElasticsearchConstruct.prototype.withDeliveryStream = function (fromStream: kinesis.Stream, index: string, vpcPlacement: VpcPlacement): ElasticsearchConstruct {
-    const props: StreamConnectorProps = {
+  ElasticsearchConstruct.prototype.withDeliveryStream = function (fromStream: kinesis.Stream, props: DeliveryProps): ElasticsearchConstruct {
+    const connectorProps: StreamConnectorProps = {
       endpoint: this.endpoint,
-      network: vpcPlacement,
       stream: fromStream,
-      index,
+      ...props,
     };
 
-    new StreamConnectorConstruct(this, 'DeliveryConnector', props);
+    const connectorConstruct = new StreamConnectorConstruct(this, 'DeliveryConnector', connectorProps);
+
+    // Grants ESHttp* access
+    connectorConstruct.streamConnector.role!.addToPolicy(new iam.PolicyStatement()
+      .addResource(this.instance.domainArn)
+      .addActions('es:ESHttp*'));
 
     return this;
   };
@@ -36,38 +46,41 @@ export function patchElasticsearchConstructWithDeliveryStream() {
 
 class StreamConnectorConstruct extends cdk.Construct {
 
+  streamConnector: lambda.Function;
+
   constructor(scope: cdk.Construct, id: string, props: StreamConnectorProps) {
     super(scope, id);
 
     const {
-      endpoint, network, stream, index
+      endpoint, vpcPlacement, stream, searchIndex
     } = props;
 
     // Defines message stream handler
-    const streamConnector = new lambda.Function(this, id, {
+    this.streamConnector = new lambda.Function(this, id, {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.handler',
+      timeout: props.timeout,
       code: lambda.Code.asset('./bin/delivery-handler'),
       environment: {
         elasticsearch_endpoint: endpoint,
-        elasticsearch_index: index
+        elasticsearch_index: searchIndex
       },
-      ...network,
+      ...vpcPlacement,
     });
 
-    streamConnector.addEventSource(new event_sources.KinesisEventSource(stream, {
-      startingPosition: lambda.StartingPosition.TrimHorizon
+    this.streamConnector.addEventSource(new event_sources.KinesisEventSource(stream, {
+      startingPosition: lambda.StartingPosition.Latest
     }));
 
     // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
-    stream.grantRead(streamConnector.role);
+    stream.grantRead(this.streamConnector.role);
+
+
   }
 }
 
-interface StreamConnectorProps {
+interface StreamConnectorProps extends DeliveryProps {
   endpoint: string
-  network: VpcPlacement
   stream: kinesis.Stream
-  index: string
 }
 

@@ -21,6 +21,6 @@ export async function handler(streamEvent: any) {
 
 async function withSentiment(record: TextLine): Promise<TextLine> {
   const sentiment = await AwsComprehendUtil.asyncDetectSentiment(record.text);
-  const timestamp = new Date().getTime();
-  return ({...record, sentiment, timestamp}) as TextLine
+  const updatedAt = new Date().getTime();
+  return ({...record, sentiment, updatedAt}) as TextLine
 }

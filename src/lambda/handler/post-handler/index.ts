@@ -34,12 +34,14 @@ export async function post(postEvent: any) {
 
   // Reads the request
   const request = JSON.parse(postEvent['body']) as PostRequest;
+  const client = request.client;
   const text = decodeBase64(request.text);
+  const createdAt = new Date().getTime();
 
   //Splits whole text by lines
   const lines = text.split(/(?:\r\n|\r|\n)/g);
   const entries = lines.filter((text: string) => text.length > 0)
-    .map((text: string, line: number) => ({text, line} as TextLine));
+    .map((text: string, line: number) => ({client, createdAt, text, line} as TextLine));
   console.info(`Processing post from ${request.client} with ${lines.length} lines`);
 
   await AwsKinesisUtil.asyncPutRecords(outputStream, entries, toPutRecordsRequestEntries);
@@ -53,12 +55,6 @@ export async function post(postEvent: any) {
     body: ''
   } as PostResponse;
 }
-
-// export async function get(getEvent: any) {
-//   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-//   console.info(`Get handler (${process.env['LAMBDA_TASK_ROOT']}) is running with envs\n${JSON.stringify(process.env)}`);
-//   TODO
-// }
 
 export function toPutRecordsRequestEntries(record: TextLine): PutRecordsRequestEntry {
   const id = record.line + '-' + record.text;

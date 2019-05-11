@@ -37,6 +37,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
     const postHandler = new lambda.Function(this, 'PostHandler', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.post',
+      timeout: 8,
       code: lambda.Code.asset('./bin/post-handler'),
       environment: {
         output_stream: postStream.streamName
@@ -48,23 +49,21 @@ class AwsStarterComprehendStack extends cdk.Stack {
 
     // Defines API Gateway
     const gatewayConstruct = new ApiGatewayConstruct(this, 'ApiGateway');
-    // Adds CORS to the root
-    // gatewayConstruct
-    //   .root().addCors({origin: '*', allowMethods: ['POST']});
     // Adds new resource
     gatewayConstruct
-      .resource('text_line')
+      .resource('text_lines')
         .addCors({origin: '*', allowMethods: ['POST']})
-        .addLambdaProxyIntegration('POST', postHandler)
+        .addLambdaProxyIntegration('POST', postHandler);
 
     // Defines message stream handler
     const sentimentHandler = new lambda.Function(this, 'SentimentHandler', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.handler',
+      timeout: 10,
       code: lambda.Code.asset('./bin/sentiment-handler'),
       environment: {
         output_stream: deliveryStream.streamName
-      }
+      },
     });
     sentimentHandler.addEventSource(new event_sources.KinesisEventSource(postStream, {
       startingPosition: lambda.StartingPosition.Latest
@@ -85,16 +84,22 @@ class AwsStarterComprehendStack extends cdk.Stack {
     const vpcConstruct = new VpcConstruct(this, 'Vpc', {maxAZs: 1});
 
     // // Bastion instances
-    // // vpcConstruct.withEc2Instance('Bastion', vpcConstruct.bastionVpcPlacement, {
-    // //   imageId: amazonLinuxImage.imageId,
-    // //   instanceType: 't2.micro',
-    // //   keyName: 'dtcimbal.aws.key.pair'
-    // // });
+    // vpcConstruct.withEc2Instance('Bastion', vpcConstruct.bastionVpcPlacement, {
+    //   imageId: amazonLinuxImage.imageId,
+    //   instanceType: 't2.micro',
+    //   keyName: 'dtcimbal.aws.key.pair'
+    // });
+
+    const elasticsearchPlacement = vpcConstruct.privateVpcPlacement;
+    const elasticsearchIndex = 'text_lines';
 
     // Elasticsearch
-    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'SearchCluster', vpcConstruct.privateVpcPlacement)
-      .withDeliveryStream(deliveryStream, 'text_line', vpcConstruct.privateVpcPlacement)
-    ;
+    const elasticsearchConstruct = new ElasticsearchConstruct(this, 'SearchCluster', elasticsearchPlacement)
+      .withDeliveryStream(deliveryStream, {
+        vpcPlacement: elasticsearchPlacement,
+        searchIndex: elasticsearchIndex,
+        timeout: 10
+      });
 
     // Alias of the elasticsearch cluster used API Gateway
     const endpoint = elasticsearchConstruct.endpoint;
@@ -142,7 +147,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
       serviceAlias: endpoint
     });
 
-    vpcConstruct.withEc2Instance('SearchProxy', vpcConstruct.privateVpcPlacement, {
+    vpcConstruct.withEc2Instance('SearchProxy', elasticsearchPlacement, {
       imageId: amazonLinuxImage.imageId,
       instanceType: 't2.micro',
       keyName: 'dtcimbal.aws.key.pair',
@@ -151,11 +156,11 @@ class AwsStarterComprehendStack extends cdk.Stack {
 
     // Step #2
     const targets = vpcConstruct.findAllEc2Instances('SearchProxy').map(it => new elbv2.InstanceTarget(it.instanceId));
-    const vpcLink = vpcConstruct.withVpcLink('VpcLink', vpcConstruct.privateVpcPlacement, targets).vpcLink;
+    const vpcLink = vpcConstruct.withVpcLink('VpcLink', elasticsearchPlacement, targets).vpcLink;
 
     // const gatewayConstruct = new ApiGatewayConstruct(this, 'ApiGateway');
     gatewayConstruct.node.addDependency(elasticsearchConstruct.instance);
-    gatewayConstruct.withVpcIntegration('POST', '/', `http://${endpoint}`, {
+    gatewayConstruct.withVpcIntegration('POST', '/search', `http://${endpoint}/_search`, {
       cors: {origin: '*'},
       vpcLink
     });
