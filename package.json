@@ -10,8 +10,8 @@
     "watch": "cross-env TS_NODE_PROJECT=\"tsconfig.json\" webpack --config webpack.config.ts --watch --progress",
     "test": "jest",
     "cdk": "cdk",
-    "submit": "node -e 'require(\"./bin/stream-connector/index.js\").main()'",
-    "get": "node -e 'require(\"./bin/http-handler/index.js\").main()'"
+    "submit": "node -e 'require(\"./bin/delivery-handler/index.js\").main()'",
+    "get": "node -e 'require(\"./bin/post-handler/index.js\").main()'"
   },
   "devDependencies": {
     "@aws-cdk/assets": "^0.27.0",

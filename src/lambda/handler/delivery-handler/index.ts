@@ -5,16 +5,22 @@ import axios from 'axios';
 // Bulk upload
 const headers = {'Content-Type': 'application/x-ndjson'};
 
+/**
+ * Delivery handler a lambda function to listen kinesis delivery stream and
+ * submit records to the specified Elasticsearch index
+ *
+ * @param streamEvent
+ */
 export async function handler(streamEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
   console.info(`Stream connectors is running with envs\n${JSON.stringify(process.env)}`);
 
-  // ES endpoint Env var
+  // Elasticsearch endpoint Env var
   const endpointEnv = process.env.elasticsearch_endpoint as string;
   const endpoint = endpointEnv.charAt(endpointEnv.length - 1) === '/' ? endpointEnv : endpointEnv + '/';
   console.log('Elasticsearch endpoint: ' + endpoint);
 
-  // ES index Env var
+  // Elasticsearch index Env var
   const indexEnv = process.env.elasticsearch_index as string;
 
   // Parses stream event
@@ -32,7 +38,7 @@ export async function handler(streamEvent: any) {
   console.info(`Submitted ${records.length} records to elasticsearch`)
 }
 
-// Ran locally only
+// To run the handler locally
 export function main() {
   console.info('Running main()');
 

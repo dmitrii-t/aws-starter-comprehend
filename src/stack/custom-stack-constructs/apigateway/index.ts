@@ -24,14 +24,14 @@ export interface CorsProps {
 
 export class ApiGatewayConstruct extends CustomConstruct<apigateway.RestApi> {
 
-  private resourceBuilders: { [key: string]: ResourceBuilder } = {};
+  private resourceBuilders: { [key: string]: ApiResourceConstruct } = {};
 
   constructor(scope: cdk.Construct, id: string = 'ApiGateway') {
     super(scope, id);
     this.instance = new apigateway.RestApi(this, id);
   }
 
-  resource(path: string, resourceBuilderProvider: (path: string) => ResourceBuilder = this.defaultResourceProvider): ResourceBuilder {
+  resource(path: string, resourceBuilderProvider: (path: string) => ApiResourceConstruct = this.defaultResourceProvider): ApiResourceConstruct {
     //
     let resource;
     if (path === '/') {
@@ -48,23 +48,23 @@ export class ApiGatewayConstruct extends CustomConstruct<apigateway.RestApi> {
     return this.resourceBuilders[resource]
   }
 
-  root(): ResourceBuilder {
-    return this.resourceBuilders['/'] = new ResourceBuilder(this, this.instance.root);
+  root(): ApiResourceConstruct {
+    return this.resourceBuilders['/'] = new ApiResourceConstruct(this, this.instance.root);
   }
 
-  private defaultResourceProvider = (path: string): ResourceBuilder => {
+  private defaultResourceProvider = (path: string): ApiResourceConstruct => {
     const resource = this.instance.root.addResource(path);
-    return new ResourceBuilder(this, resource)
+    return new ApiResourceConstruct(this, resource)
   }
 
 }
 
-export class ResourceBuilder {
+export class ApiResourceConstruct {
 
-  constructor(private restApiConstruct: ApiGatewayConstruct, private resource: IRestApiResource) {
+  constructor(private apiGatewayConstruct: ApiGatewayConstruct, private resource: IRestApiResource) {
   }
 
-  addCors(props: CorsProps): ApiGatewayConstruct {
+  addCors(props: CorsProps): ApiResourceConstruct {
     const {
       origin, allowMethods, allowHeaders
     } = props;
@@ -106,10 +106,10 @@ export class ResourceBuilder {
 
     //
     this.resource.addMethod('OPTIONS', integration, method);
-    return this.restApiConstruct;
+    return this;
   }
 
-  addLambdaProxyIntegration(httpMethod: string, handler: lambda.Function, options?: LambdaIntegrationOptions): ApiGatewayConstruct {
+  addLambdaProxyIntegration(httpMethod: string, handler: lambda.Function, options?: LambdaIntegrationOptions): ApiResourceConstruct {
     const integrationProps: LambdaIntegrationOptions = {
       // True is the default value, just to be explicit
       proxy: true,
@@ -117,10 +117,10 @@ export class ResourceBuilder {
       ...options,
     };
     this.resource.addMethod(httpMethod, new apigateway.LambdaIntegration(handler, integrationProps));
-    return this.restApiConstruct;
+    return this;
   }
 
-  addHttpProxyIntegration(httpMethod: string, url: string, integrationProps?: HttpIntegrationProps, methodProps?: MethodOptions): ApiGatewayConstruct {
+  addHttpProxyIntegration(httpMethod: string, url: string, integrationProps?: HttpIntegrationProps, methodProps?: MethodOptions): ApiResourceConstruct {
     //
     const method: MethodOptions = {
       authorizationType: AuthorizationType.None,
@@ -150,7 +150,11 @@ export class ResourceBuilder {
       ...integrationProps
     });
     this.resource.addMethod(httpMethod, integration, method);
-    return this.restApiConstruct;
+    return this;
+  }
+
+  getApiGatewayConstruct(): ApiGatewayConstruct {
+    return this.apiGatewayConstruct;
   }
 }
 

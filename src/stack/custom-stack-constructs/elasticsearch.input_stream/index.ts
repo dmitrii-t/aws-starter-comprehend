@@ -28,7 +28,8 @@ export function patchElasticsearchConstructWithDeliveryStream() {
       index,
     };
 
-    new StreamConnectorConstruct(this, 'StreamConnector', props);
+    new StreamConnectorConstruct(this, 'DeliveryConnector', props);
+
     return this;
   };
 }
@@ -43,10 +44,10 @@ class StreamConnectorConstruct extends cdk.Construct {
     } = props;
 
     // Defines message stream handler
-    const streamConnector = new lambda.Function(this, 'StreamConnector', {
+    const streamConnector = new lambda.Function(this, id, {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.handler',
-      code: lambda.Code.asset('./bin/stream-connector'),
+      code: lambda.Code.asset('./bin/delivery-handler'),
       environment: {
         elasticsearch_endpoint: endpoint,
         elasticsearch_index: index

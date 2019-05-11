@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<body>
+<div>
+    <form>
+        <div>
+            <label for="text-input">Enter text lines below to submit</label>
+            <br/>
+            <textarea class="input" id="text-input" rows="4" cols="35"></textarea>
+            <br/>
+            <textarea readonly class="output" rows="25" cols="35"></textarea>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+<script>
+    // TODO embed endpoint url
+    var ENDPOINT_URL = "https://mkywp5xub6.execute-api.us-west-2.amazonaws.com/prod/text_line";
+
+    // TODO generate with Cognito
+    var CLIENT_UUID = uuid();
+
+    function uuid() {
+        var dt = new Date().getTime();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (dt + Math.random() * 16) % 16 | 0;
+            dt = Math.floor(dt / 16);
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+    function showResult(json) {
+        //
+    }
+
+    function encodeBase64(text) {
+        return new Promise(function (resolve, reject) {
+            try  {
+                resolve(btoa(text));
+            } catch(error) {
+                reject(error);
+            }
+        });
+    }
+
+    function post(text) {
+        encodeBase64(text)
+            .then(function (encoded) {
+                // Formats the body
+                var body = JSON.stringify({
+                    client: CLIENT_UUID,
+                    text: encoded
+                });
+
+                // Sends the request
+                return fetch(ENDPOINT_URL, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    // mode: 'no-cors',
+                    body: body
+                })
+            }).then(function (response) {
+                if (response.ok) {
+                    // TODO Parse actual response if needed
+                    // return response.json();
+                    return {}
+                }
+                throw new Error("Request failed with status:" + response.status + ":" + response.statusText);
+
+            }).then(function (json) {
+                showResult(json);
+
+            }).catch(function (error) {
+                console.error('Error:', error);
+
+            });
+    }
+
+    var textForm = document.querySelector("form");
+
+    // Adds onsubmit handler
+    textForm.onsubmit = function (event) {
+        event.preventDefault();
+
+        // Parses files input
+        var value = document.querySelector("textarea.input").value;
+        if (value.length === 0) {
+            console.debug("No value entered");
+            return
+        }
+
+        // Posts text
+        post(value);
+    };
+</script>
+</body>
+</html>

@@ -1,11 +1,10 @@
 import * as AwsKinesisUtil from '../../util/aws/kinesis';
 import * as AwsComprehendUtil from '../../util/aws/comprehend';
 import { TextLine } from '../../model';
-import { toPutRecordsRequestEntries } from '../http-handler';
+import { toPutRecordsRequestEntries } from '../post-handler';
 
 export async function handler(streamEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-
   console.info(`Stream handler is running with envs\n${JSON.stringify(process.env)}`);
 
   // Reads Env vars

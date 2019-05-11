@@ -39,8 +39,8 @@ export function patchApiGatewayConstructWithVpcIntegration() {
       this.node.addDependency(props.vpcLink);
     }
 
-    const resource = this.resource(resourceName);
-    resource.addHttpProxyIntegration(method, integrationPath, integrationProps);
+    const resource = this.resource(resourceName)
+      .addHttpProxyIntegration(method, integrationPath, integrationProps);
 
     // Applies provided props
     if (props && props.cors) {
