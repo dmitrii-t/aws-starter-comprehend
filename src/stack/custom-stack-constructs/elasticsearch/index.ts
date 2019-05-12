@@ -37,6 +37,15 @@ export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
   constructor(scope: cdk.Construct, id: string = 'Elasticsearch', props?: VpcPlacement) {
     super(scope, id);
 
+    //TODO Add CloudWatch alarms for the cluster to signal if
+    // - Average CPU utilization over last 10 minutes too high
+    // - Average CPU credit balance over last 10 minutes too low (expect a significant performance drop soon)
+    // - Average JVM memory pressure over last 10 minutes too high
+    // - Master is not reachable (network issue)
+    // - No automated snapshot was taken for the domain in the previous 48 hours
+    // - Cluster is running out of storage space
+    // - Cluster is blocking incoming write requests
+
     this.vpcPlacement = props;
 
     // Vpc options

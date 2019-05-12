@@ -7,6 +7,8 @@ declare module '../vpc' {
   // Extends Vpc construct with new features
   interface VpcConstruct {
 
+    // TODO Add withAutoScalingGroup() feature
+
     withEc2Instances(name: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct;
 
     findAllEc2Instances(name: string): CfnInstance[];
@@ -52,21 +54,22 @@ export function patchVpcConstructWithEc2Instance() {
     const subnets: IVpcSubnet[] = vpc.subnets(vpcPlacementStrategy);
 
     // Groups subnets by AZ
-    const subnetsByAz:{ [key: string]: IVpcSubnet[] } = subnets.reduce((acc: { [key: string]: IVpcSubnet[] }, subnet: IVpcSubnet) => {
-      const az = subnet.availabilityZone;
-      if (az in acc) {
-        // Adds to existing list of subnets
-        acc[az].push(subnet);
-      } else {
-        // Adds new list
-        acc[az] = [subnet]
-      }
-      return acc
-    }, {});
+    const subnetsByAz: { [key: string]: IVpcSubnet[] } = subnets.reduce(
+      (acc: { [key: string]: IVpcSubnet[] }, subnet: IVpcSubnet) => {
+        const az = subnet.availabilityZone;
+        if (az in acc) {
+          // Adds to existing list of subnets
+          acc[az].push(subnet);
+        } else {
+          // Adds new list
+          acc[az] = [subnet]
+        }
+        return acc
+      }, {});
 
     const self = this;
 
-    Object.keys(subnetsByAz).map((az:string) => {
+    Object.keys(subnetsByAz).map((az: string) => {
       // Formats Ec2 Instance Id
       const instanceId = name + '-' + az;
 
@@ -109,7 +112,7 @@ export function patchVpcConstructWithEc2Instance() {
       });
 
       const instancePrivateEndpoint = new cdk.CfnOutput(this, `${instanceId}InstancePrivateEndpoint`, {
-        description: `${instanceId} instance priuvate DNS name`,
+        description: `${instanceId} instance private DNS name`,
         value: ec2Instance.instancePrivateDnsName
       });
 
