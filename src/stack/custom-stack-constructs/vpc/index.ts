@@ -7,16 +7,28 @@ export const publicPlacementStrategy: ec2.VpcPlacementStrategy = {subnetsToUse: 
 export const privatePlacementStrategy: ec2.VpcPlacementStrategy = {subnetsToUse: SubnetType.Private};
 export const isolatedPlacementStrategy: ec2.VpcPlacementStrategy = {subnetsToUse: SubnetType.Isolated};
 
+/**
+ * Props to configure VPC
+ */
 export interface VpcProps {
-  maxAZs: number;
+  readonly maxAZs: number;
 }
 
+/**
+ * Props to configure VPC placement
+ */
 export interface VpcPlacement {
   readonly vpc: ec2.VpcNetwork;
   readonly vpcPlacementStrategy: ec2.VpcPlacementStrategy;
   readonly securityGroup: ec2.SecurityGroup;
 }
 
+/**
+ * Construct to build and configure VPC. Defines by default three subnets
+ * public which publicly accessible, private which is accessible form the public network
+ * and isolated which is accessible from the private subnet only.s
+ *
+ */
 export class VpcConstruct extends CustomConstruct<ec2.VpcNetwork> {
 
   readonly availabilityZones: string[];
@@ -73,28 +85,28 @@ export class VpcConstruct extends CustomConstruct<ec2.VpcNetwork> {
     }
   }
 
-  get publicSubnets(): ec2.IVpcSubnet[] {
-    return this.instance.subnets(publicPlacementStrategy);
-  }
-
   get publicSubnetIds(): string[] {
     return this.instance.subnets(publicPlacementStrategy).map(it => it.subnetId);
-  }
-
-  get privateSubnets(): ec2.IVpcSubnet[] {
-    return this.instance.subnets(privatePlacementStrategy);
   }
 
   get privateSubnetIds(): string[] {
     return this.instance.subnets(privatePlacementStrategy).map(it => it.subnetId);
   }
 
-  get isolatedSubnets(): ec2.IVpcSubnet[] {
-    return this.instance.subnets(isolatedPlacementStrategy);
-  }
-
   get isolatedSubnetIds(): string[] {
     return this.instance.subnets(isolatedPlacementStrategy).map(it => it.subnetId);
+  }
+
+  get publicSubnets(): ec2.IVpcSubnet[] {
+    return this.instance.subnets(publicPlacementStrategy);
+  }
+
+  get privateSubnets(): ec2.IVpcSubnet[] {
+    return this.instance.subnets(privatePlacementStrategy);
+  }
+
+  get isolatedSubnets(): ec2.IVpcSubnet[] {
+    return this.instance.subnets(isolatedPlacementStrategy);
   }
 
   get vpc(): ec2.VpcNetwork {

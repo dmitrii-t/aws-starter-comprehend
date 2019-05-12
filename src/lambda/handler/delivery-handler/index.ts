@@ -1,17 +1,11 @@
-import * as aws from 'aws-sdk';
 import * as AwsKinesisUtil from '../../util/aws/kinesis';
+import axios from 'axios';
 import { TextLine } from '../../model';
 
 // Bulk upload
 const defaultHeaders = {
-  'Content-Type': 'application/x-ndjson'
+  'Content-Type': 'application/x-ndjson',
 };
-
-// Declares missed typings
-declare module 'aws-sdk' {
-  const NodeHttpClient: any;
-  const Signers: any;
-}
 
 /**
  * Delivery handler a lambda function to listen kinesis delivery stream and
@@ -28,9 +22,12 @@ export async function handler(streamEvent: any, context: any) {
   const region = process.env.AWS_REGION!;
   console.info(`region ${region}`);
 
+  // const localstack = process.env.LOCALSTACK_HOSTNAME;
   const indexEnv = process.env.elasticsearch_index as string;
   const endpointEnv = process.env.elasticsearch_endpoint as string;
-  const endpointUrl = endpointEnv.charAt(endpointEnv.length - 1) === '/' ? endpointEnv : endpointEnv + '/';
+  const endpointUrl = endpointEnv.charAt(endpointEnv.length - 1) === '/'
+    ? endpointEnv.substr(0, endpointEnv.length - 1)
+    : endpointEnv;
 
   console.log('Elasticsearch endpoint: ' + endpointUrl);
 
@@ -43,43 +40,15 @@ export async function handler(streamEvent: any, context: any) {
     return [JSON.stringify(action), JSON.stringify(record)].join('\n')
   });
   const data = actions.join('\n') + '\n';
-  console.debug(`Submitting data\n---\n${data}---`);
+  console.debug(`submitting data\n---\n${data}---`);
 
-  const credentials = new aws.EnvironmentCredentials('AWS');
+  // TODO complete bulk submit to Elasticsearch cluster
+  // await axios.post(localstack + '/_bulk', data, {
+  //   headers: {...defaultHeaders, 'Host': endpointUrl}
+  // }).then((response) => context.succeed(`successful response ${JSON.stringify(response)}`))
+  //   .catch((error) => context.fail(`error ${error}`));
 
-  const endpoint = new aws.Endpoint(endpointUrl);
-  const request = new aws.HttpRequest(endpoint, region);
-  request.method = 'POST';
-  request.path = '_bulk';
-  request.headers = {
-    ...defaultHeaders,
-    'Host': endpoint.host
-  };
-  request.body = data;
-
-  const signer = new aws.Signers.V4(request, 'es');  // es: service code
-  signer.addAuthorization(credentials, new Date());
-  console.info(`Added authorization for service es with bound AWS credentials`);
-
-  const http = new aws.NodeHttpClient();
-  http.handleRequest(request, null, (httpResp: any) => {
-    console.info('incoming \n' + JSON.stringify(httpResp));
-
-    const encoding = (httpResp.headers['content-encoding'] || '').toLowerCase();
-    if (encoding === 'gzip' || encoding === 'deflate') {
-      console.warn('gzip');
-      return;
-    }
-
-    httpResp.setEncoding('utf8');
-
-    let response = '';
-    httpResp.on('data', (data: any) => response += data);
-    httpResp.on('error', (error: any) => context.fail(`Error ${error}`));
-    httpResp.on('end', () => context.succeed(`successful response ${response}`));
-  }, (error: any) => context.fail(`Err ${error}`));
-
-  console.info(`Submitted ${records.length} records to elasticsearch`)
+  console.info(`submitted ${records.length} records to elasticsearch`)
 }
 
 // To run the handler locally
@@ -110,5 +79,9 @@ export function main() {
       }
     ]
   };
-  handler(event, {})
+  handler(event, {
+    succeed: (message: any) => {
+    }, fail: (error: any) => {
+    }
+  })
 }

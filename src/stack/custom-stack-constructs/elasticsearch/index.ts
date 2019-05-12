@@ -7,30 +7,39 @@ import { VpcPlacement } from '../vpc';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import { IVpcSubnet } from '@aws-cdk/aws-ec2';
 
-export interface ElasticsearchVpcPlacement extends VpcPlacement {
+interface EsVpcOptions {
+  subnet: IVpcSubnet
+  securityGroup: ec2.SecurityGroup
 }
 
+/**
+ * Elasticsearch construct to build and configure Elasticsearch cluster
+ *
+ */
 export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
-
-  id: string;
 
   vpcPlacement?: VpcPlacement;
 
+  /**
+   * Returns instance of Elasticsearch cluster
+   */
   get elasticsearch(): CfnDomain {
     return this.instance
   }
 
+  /**
+   * Returns endpoint url
+   */
   get endpoint(): string {
-    // Use non-secure http for internal access
     return this.instance.domainEndpoint;
   }
 
-  constructor(scope: cdk.Construct, id: string = 'Elasticsearch', props?: ElasticsearchVpcPlacement) {
+  constructor(scope: cdk.Construct, id: string = 'Elasticsearch', props?: VpcPlacement) {
     super(scope, id);
 
     this.vpcPlacement = props;
 
-    // Vpc
+    // Vpc options
     const vpcOptions: EsVpcOptions | undefined = props && props.vpc
       ? formatEsVpcOptions(props)
       : undefined;
@@ -80,11 +89,6 @@ export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
   }
 }
 
-interface EsVpcOptions {
-  subnet: IVpcSubnet
-  securityGroup: ec2.SecurityGroup
-}
-
 function formatEsVpcOptions(vpcOptions: VpcPlacement): EsVpcOptions {
   const vpc = vpcOptions.vpc;
 
@@ -97,6 +101,5 @@ function formatEsVpcOptions(vpcOptions: VpcPlacement): EsVpcOptions {
 }
 
 function formatDomainName(value: string): string {
-  //TODO Add camelcase to hyphen separated conversion
   return value.replace(/\s+/g, '-').toLowerCase()
 }

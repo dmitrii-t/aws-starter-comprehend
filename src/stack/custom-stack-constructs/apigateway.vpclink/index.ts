@@ -1,8 +1,6 @@
 import { ApiGatewayConstruct } from '../apigateway';
 import { ConnectionType, HttpIntegrationProps, VpcLink } from '@aws-cdk/aws-apigateway';
 
-
-// Adds ElasticsearchConstruct stream methods  declaration
 declare module '../apigateway' {
   interface ApiGatewayConstruct {
     withVpcIntegration(method: string, resourceName: string, integrationPath: string, props?: ApiGatewayProps): ApiGatewayConstruct;
@@ -17,10 +15,23 @@ export interface ApiGatewayProps {
   vpcLink?: VpcLink
 }
 
+/**
+ * Patches API Gateway with the ability to configure VPC integration
+ *
+ */
 export function patchApiGatewayConstructWithVpcIntegration() {
 
-  ApiGatewayConstruct.prototype.withVpcIntegration = function (method: string, resourceName: string, integrationPath: string, props?: ApiGatewayProps) {
+  /**
+   * Configures VPC integration
+   *
+   * @param httpMethod
+   * @param resourceName
+   * @param integrationPath
+   * @param props
+   */
+  ApiGatewayConstruct.prototype.withVpcIntegration = function (httpMethod: string, resourceName: string, integrationPath: string, props?: ApiGatewayProps) {
 
+    // Defines integration props
     let integrationProps: HttpIntegrationProps = {};
 
     if (props && props.vpcLink) {
@@ -40,11 +51,11 @@ export function patchApiGatewayConstructWithVpcIntegration() {
     }
 
     const resource = this.resource(resourceName)
-      .addHttpProxyIntegration(method, integrationPath, integrationProps);
+      .addHttpProxyIntegration(httpMethod, integrationPath, integrationProps);
 
     // Applies provided props
     if (props && props.cors) {
-      resource.addCors({allowMethods: [method], ...props.cors})
+      resource.addCors({allowMethods: [httpMethod], ...props.cors})
     }
 
     return this;

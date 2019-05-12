@@ -7,9 +7,9 @@ import * as lambda from '@aws-cdk/aws-lambda'
 import * as event_sources from '@aws-cdk/aws-lambda-event-sources'
 import * as iam from '@aws-cdk/aws-iam'
 
-import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.input_stream'
+import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.delivery.stream'
 import { VpcConstruct } from './custom-stack-constructs/vpc'
-import { patchVpcConstructWithBastion } from './custom-stack-constructs/vpc.ec2'
+import { patchVpcConstructWithEc2Instance } from './custom-stack-constructs/vpc.ec2'
 import { patchVpcConstructWithVpcLink } from './custom-stack-constructs/vpc.link'
 import { ElasticsearchConstruct } from './custom-stack-constructs/elasticsearch'
 import { ApiGatewayConstruct } from './custom-stack-constructs/apigateway'
@@ -19,21 +19,25 @@ import { patchApiGatewayConstructWithVpcIntegration } from './custom-stack-const
 patchElasticsearchConstructWithDeliveryStream();
 patchApiGatewayConstructWithVpcIntegration();
 patchVpcConstructWithVpcLink();
-patchVpcConstructWithBastion();
+patchVpcConstructWithEc2Instance();
 
 /**
- * Builds a could stack which includes
- * TODO Add description
+ * Builds a could stack which utilises
+ *
  */
-class AwsStarterComprehendStack extends cdk.Stack {
+class AwsStarterSentimentAnalysisStack extends cdk.Stack {
 
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const postStream = new kinesis.Stream(this, 'PostStream');
-    const deliveryStream = new kinesis.Stream(this, 'DeliveryStream');
+    // Defines stack constants
+    const elasticsearchIndex = 'text_lines';
 
-    // Defines s3 file handler which populates file contents to the data stream
+    // Defines Kinesis stream to handle submitted text lines
+    const postStream = new kinesis.Stream(this, 'PostStream');
+
+    // Defines lambda handler to process POST requests, split provided text by lines
+    // and populate lines to kinesis stream for further porocessing
     const postHandler = new lambda.Function(this, 'PostHandler', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.post',
@@ -43,19 +47,21 @@ class AwsStarterComprehendStack extends cdk.Stack {
         output_stream: postStream.streamName
       }
     });
-
-    // Grants write permission to the source stream
+    // Grants write permission to the handler to publish to the post stream
     postStream.grantWrite(postHandler.role);
 
-    // Defines API Gateway
+    // Defines API Gateway for the stack
     const gatewayConstruct = new ApiGatewayConstruct(this, 'ApiGateway');
-    // Adds new resource
+    // Adds resource to submit text via POST method
     gatewayConstruct
       .resource('text_lines')
-        .addCors({origin: '*', allowMethods: ['POST']})
-        .addLambdaProxyIntegration('POST', postHandler);
+      .addCors({origin: '*', allowMethods: ['POST']})
+      .addLambdaProxyIntegration('POST', postHandler);
 
-    // Defines message stream handler
+    // Defines Kinesis stream to deliver processed text lines to Elasticsearch cluster
+    const deliveryStream = new kinesis.Stream(this, 'DeliveryStream');
+
+    // Defines lambda handler to append recognized sentiment to submitted text lines
     const sentimentHandler = new lambda.Function(this, 'SentimentHandler', {
       runtime: lambda.Runtime.NodeJS810,
       handler: 'index.handler',
@@ -65,10 +71,12 @@ class AwsStarterComprehendStack extends cdk.Stack {
         output_stream: deliveryStream.streamName
       },
     });
+    // Adds Kinesis post stream as a source
     sentimentHandler.addEventSource(new event_sources.KinesisEventSource(postStream, {
       startingPosition: lambda.StartingPosition.Latest
     }));
     // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
+    // to the sentimentHandler to allow it to read post stream and publish to the delivery stream
     postStream.grantRead(sentimentHandler.role);
     deliveryStream.grantWrite(sentimentHandler.role);
 
@@ -77,21 +85,18 @@ class AwsStarterComprehendStack extends cdk.Stack {
       .addAllResources()
       .addActions('comprehend:DetectSentiment'));
 
-    // EC2 configuration below
-    const amazonLinuxImage = new ec2.AmazonLinuxImage().getImage(this);
-
-    // Builds VPC construct
+    // Defines VPC construct
     const vpcConstruct = new VpcConstruct(this, 'Vpc', {maxAZs: 1});
 
     // // Bastion instances
-    // vpcConstruct.withEc2Instance('Bastion', vpcConstruct.bastionVpcPlacement, {
+    // vpcConstruct.withEc2Instances('Bastion', vpcConstruct.bastionVpcPlacement, {
     //   imageId: amazonLinuxImage.imageId,
     //   instanceType: 't2.micro',
     //   keyName: 'dtcimbal.aws.key.pair'
     // });
 
+    // Defines shared placement strategy for the stack components below
     const elasticsearchPlacement = vpcConstruct.privateVpcPlacement;
-    const elasticsearchIndex = 'text_lines';
 
     // Elasticsearch
     const elasticsearchConstruct = new ElasticsearchConstruct(this, 'SearchCluster', elasticsearchPlacement)
@@ -101,9 +106,13 @@ class AwsStarterComprehendStack extends cdk.Stack {
         timeout: 10
       });
 
-    // Alias of the elasticsearch cluster used API Gateway
+    // EC2 configuration below
+    const amazonLinuxImage = new ec2.AmazonLinuxImage().getImage(this);
+
+    // Defines alias of the endpoint  elasticsearch cluster
     const endpoint = elasticsearchConstruct.endpoint;
 
+    // Defines HTTP proxy init block
     const proxyInit = cdk.Fn.sub([
       `#cloud-config`,
       `repo_update: true`,
@@ -122,7 +131,7 @@ class AwsStarterComprehendStack extends cdk.Stack {
       `      listen 80;`,
       `      listen [::]:80;`,
       ``,
-      `      server_name \${serviceAlias};`,
+      `      server_name \${targetEndpoint};`,
       ``,
       `      location / {`,
       `        proxy_http_version 1.1;`,
@@ -143,31 +152,33 @@ class AwsStarterComprehendStack extends cdk.Stack {
       `#eof`,
       ``,
     ].join('\n'), {
-      targetEndpoint: endpoint,
-      serviceAlias: endpoint
+      targetEndpoint: endpoint
     });
 
-    vpcConstruct.withEc2Instance('SearchProxy', elasticsearchPlacement, {
+    // Defines EC2
+    vpcConstruct.withEc2Instances('SearchProxy', elasticsearchPlacement, {
       imageId: amazonLinuxImage.imageId,
       instanceType: 't2.micro',
       keyName: 'dtcimbal.aws.key.pair',
       userData: cdk.Fn.base64(proxyInit),
     });
 
-    // Step #2
+    // Defines NetworkLoadBalancer targets to send traffic from API Gateway
     const targets = vpcConstruct.findAllEc2Instances('SearchProxy').map(it => new elbv2.InstanceTarget(it.instanceId));
+    // Defines VPC Link for API Gateway to sent traffic to
     const vpcLink = vpcConstruct.withVpcLink('VpcLink', elasticsearchPlacement, targets).vpcLink;
 
-    // const gatewayConstruct = new ApiGatewayConstruct(this, 'ApiGateway');
+    // Instruments API Gateway to create another resource /search integrated to VPC
     gatewayConstruct.node.addDependency(elasticsearchConstruct.instance);
     gatewayConstruct.withVpcIntegration('POST', '/search', `http://${endpoint}/_search`, {
       cors: {origin: '*'},
       vpcLink
     });
+
   }
 }
 
 // Runs
 const app = new cdk.App();
-new AwsStarterComprehendStack(app, 'AwsStarterComprehendStack');
+new AwsStarterSentimentAnalysisStack(app, 'AwsStarterSentimentAnalysisStack');
 app.run();

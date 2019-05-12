@@ -6,6 +6,9 @@ import * as event_sources from '@aws-cdk/aws-lambda-event-sources';
 import { VpcPlacement } from '../vpc';
 import * as iam from '@aws-cdk/aws-iam';
 
+/**
+ * Props to configure delivery stream for Elasticsearch cluster
+ */
 export interface DeliveryProps {
   vpcPlacement: VpcPlacement
   timeout: number
@@ -19,6 +22,11 @@ declare module '../elasticsearch' {
   }
 }
 
+/**
+ * Patches Elasticsearch construct  with the ability to configure delivery stream to
+ * deliver messages from kinesis stream to Elasticsearch cluster
+ *
+ */
 export function patchElasticsearchConstructWithDeliveryStream() {
   /**
    * Adds delivery stream to populate messages to the specified ES index
@@ -39,6 +47,9 @@ export function patchElasticsearchConstructWithDeliveryStream() {
     connectorConstruct.streamConnector.role!.addToPolicy(new iam.PolicyStatement()
       .addResource(this.instance.domainArn)
       .addActions('es:ESHttp*'));
+      // Broad permissions
+      // .addResource("arn:aws:es:::")
+      // .addActions('es:*'));
 
     return this;
   };
@@ -74,8 +85,6 @@ class StreamConnectorConstruct extends cdk.Construct {
 
     // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
     stream.grantRead(this.streamConnector.role);
-
-
   }
 }
 

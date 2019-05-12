@@ -13,8 +13,10 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/cdk';
 import { AuthorizationType } from '@aws-cdk/aws-apigateway';
 
-
-const CORS_DEFAULT_ALLOW_HEADERS = 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token';
+// Allowed headers
+const CORS_DEFAULT_ALLOW_HEADERS = [
+  'Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token'
+].join(',');
 
 export interface CorsProps {
   origin: string;
@@ -22,6 +24,10 @@ export interface CorsProps {
   allowHeaders?: string;
 }
 
+/**
+ * Construct to build and configure API Gateway
+ *
+ */
 export class ApiGatewayConstruct extends CustomConstruct<apigateway.RestApi> {
 
   private resourceBuilders: { [key: string]: ApiResourceConstruct } = {};
@@ -31,15 +37,21 @@ export class ApiGatewayConstruct extends CustomConstruct<apigateway.RestApi> {
     this.instance = new apigateway.RestApi(this, id);
   }
 
+  /**
+   * Creates or or simply returns specified resource
+   *
+   * @param path
+   * @param resourceBuilderProvider
+   */
   resource(path: string, resourceBuilderProvider: (path: string) => ApiResourceConstruct = this.defaultResourceProvider): ApiResourceConstruct {
-    //
-    let resource;
+
+    // Returns the root if path is just '/'
     if (path === '/') {
       return this.root();
     }
 
     const segments = path.split('/');
-    resource = segments[0] || segments[1];
+    let resource = segments[0] || segments[1];
 
     if (!(resource in this.resourceBuilders)) {
       this.resourceBuilders[resource] = resourceBuilderProvider(resource)
@@ -48,6 +60,9 @@ export class ApiGatewayConstruct extends CustomConstruct<apigateway.RestApi> {
     return this.resourceBuilders[resource]
   }
 
+  /**
+   * Returns root resource
+   */
   root(): ApiResourceConstruct {
     return this.resourceBuilders['/'] = new ApiResourceConstruct(this, this.instance.root);
   }
@@ -64,15 +79,29 @@ export class ApiResourceConstruct {
   constructor(private apiGatewayConstruct: ApiGatewayConstruct, private resource: IRestApiResource) {
   }
 
+  /**
+   * Returns instance of API Gateway Construct for the resource. It is useful
+   * when to have fluent API where you can chain multiple method calls to build the API in form of
+   *
+   *
+   */
+  getApiGatewayConstruct(): ApiGatewayConstruct {
+    return this.apiGatewayConstruct;
+  }
+
+  /**
+   * Configures CORS policies for current resource
+   *
+   * @param props
+   */
   addCors(props: CorsProps): ApiResourceConstruct {
     const {
       origin, allowMethods, allowHeaders
     } = props;
 
-    //
     const localAllowMethods: string[] = ['OPTIONS'].concat(allowMethods);
 
-    const integration = new apigateway.MockIntegration({
+    const mockIntegration = new apigateway.MockIntegration({
       passthroughBehavior: PassthroughBehavior.Never,
       requestTemplates: {
         'application/json': '{"statusCode": 200}'
@@ -104,11 +133,18 @@ export class ApiResourceConstruct {
       }]
     };
 
-    //
-    this.resource.addMethod('OPTIONS', integration, method);
+    // Instruments OPTION http method to return CORS policies
+    this.resource.addMethod('OPTIONS', mockIntegration, method);
     return this;
   }
 
+  /**
+   * Adds lambda PROXY integration to current API Gateway
+   *
+   * @param httpMethod
+   * @param handler
+   * @param options
+   */
   addLambdaProxyIntegration(httpMethod: string, handler: lambda.Function, options?: LambdaIntegrationOptions): ApiResourceConstruct {
     const integrationProps: LambdaIntegrationOptions = {
       // True is the default value, just to be explicit
@@ -120,6 +156,14 @@ export class ApiResourceConstruct {
     return this;
   }
 
+  /**
+   * Adds HTTP proxy integration to API Gateway
+   *
+   * @param httpMethod
+   * @param url
+   * @param integrationProps
+   * @param methodProps
+   */
   addHttpProxyIntegration(httpMethod: string, url: string, integrationProps?: HttpIntegrationProps, methodProps?: MethodOptions): ApiResourceConstruct {
     //
     const method: MethodOptions = {
@@ -153,8 +197,5 @@ export class ApiResourceConstruct {
     return this;
   }
 
-  getApiGatewayConstruct(): ApiGatewayConstruct {
-    return this.apiGatewayConstruct;
-  }
 }
 

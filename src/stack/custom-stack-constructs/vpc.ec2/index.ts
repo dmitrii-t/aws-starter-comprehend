@@ -4,8 +4,10 @@ import { CfnInstance, CfnInstanceProps, IVpcSubnet } from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/cdk';
 
 declare module '../vpc' {
+  // Extends Vpc construct with new features
   interface VpcConstruct {
-    withEc2Instance(name: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct;
+
+    withEc2Instances(name: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct;
 
     findAllEc2Instances(name: string): CfnInstance[];
 
@@ -13,14 +15,20 @@ declare module '../vpc' {
   }
 }
 
-export function patchVpcConstructWithBastion() {
+/**
+ * Patches Vpc construct with the ability to configure EC2
+ * instance.
+ *
+ */
+export function patchVpcConstructWithEc2Instance() {
 
   /**
-   *
+   * Map of all EC2 instances in the VPC created with the construct
    */
   VpcConstruct.prototype.ec2Instances = {};
 
   /**
+   * Return all EC2 instances with provided name
    *
    * @param name
    */
@@ -28,10 +36,14 @@ export function patchVpcConstructWithBastion() {
     return this.ec2Instances[name];
   };
 
-  /*
+  /**
    *
+   *
+   * @param name
+   * @param vpcPlacement
+   * @param props
    */
-  VpcConstruct.prototype.withEc2Instance = function (id: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct {
+  VpcConstruct.prototype.withEc2Instances = function (name: string, vpcPlacement: VpcPlacement, props?: CfnInstanceProps): VpcConstruct {
     const {
       vpc, vpcPlacementStrategy, securityGroup
     } = vpcPlacement;
@@ -56,7 +68,7 @@ export function patchVpcConstructWithBastion() {
 
     Object.keys(subnetsByAz).map((az:string) => {
       // Formats Ec2 Instance Id
-      const instanceId = id + '-' + az;
+      const instanceId = name + '-' + az;
 
       // Holds AZ subnets
       const azSubnets = subnetsByAz[az];
@@ -84,10 +96,10 @@ export function patchVpcConstructWithBastion() {
       });
 
       // Pushing mapping to the ec2 instance
-      if (id in this.ec2Instances) {
-        this.ec2Instances[id].push(ec2Instance);
+      if (name in this.ec2Instances) {
+        this.ec2Instances[name].push(ec2Instance);
       } else {
-        this.ec2Instances[id] = [ec2Instance]
+        this.ec2Instances[name] = [ec2Instance]
       }
 
       // Outputs
