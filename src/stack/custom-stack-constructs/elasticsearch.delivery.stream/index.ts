@@ -1,24 +1,28 @@
 import { ElasticsearchConstruct } from '../elasticsearch';
-import * as kinesis from '@aws-cdk/aws-kinesis';
 import * as cdk from '@aws-cdk/cdk';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as event_sources from '@aws-cdk/aws-lambda-event-sources';
-import { VpcPlacement } from '../vpc';
 import * as iam from '@aws-cdk/aws-iam';
+import * as firehose from '@aws-cdk/aws-kinesisfirehose';
+import { CfnDeliveryStream } from '@aws-cdk/aws-kinesisfirehose';
+import { Bucket } from '@aws-cdk/aws-s3';
+
 
 /**
  * Props to configure delivery stream for Elasticsearch cluster
  */
 export interface DeliveryProps {
-  vpcPlacement: VpcPlacement
-  timeout: number
-  searchIndex: string
+  backupBucket: Bucket;
+  elasticsearchIndex: string
 }
 
 // Adds ElasticsearchConstruct stream method declarations
 declare module '../elasticsearch' {
+
   interface ElasticsearchConstruct {
-    withDeliveryStream(fromStream: kinesis.Stream, props: DeliveryProps): ElasticsearchConstruct;
+    withDeliveryStream(name: string, props: DeliveryProps): ElasticsearchConstruct;
+
+    getDeliveryStream(name: string): CfnDeliveryStream
+
+    deliveryStreams: { [key: string]: CfnDeliveryStream }
   }
 }
 
@@ -28,68 +32,84 @@ declare module '../elasticsearch' {
  *
  */
 export function patchElasticsearchConstructWithDeliveryStream() {
+
+  /**
+   * Holds map name to delivery stream
+   *
+   */
+  ElasticsearchConstruct.prototype.deliveryStreams = {};
+
+  /**
+   * Returns delivery stream by name
+   *
+   * @param name
+   */
+  ElasticsearchConstruct.prototype.getDeliveryStream = function (name: string): CfnDeliveryStream {
+    return this.deliveryStreams[name];
+  };
+
   /**
    * Adds delivery stream to populate messages to the specified ES index
    *
-   * @param fromStream
+   * @param id
    * @param props
    */
-  ElasticsearchConstruct.prototype.withDeliveryStream = function (fromStream: kinesis.Stream, props: DeliveryProps): ElasticsearchConstruct {
-    const connectorProps: StreamConnectorProps = {
-      endpoint: this.domainEndpoint,
-      stream: fromStream,
-      ...props,
-    };
+  ElasticsearchConstruct.prototype.withDeliveryStream = function (id: string, props: DeliveryProps): ElasticsearchConstruct {
+    //
+    const {
+      backupBucket, elasticsearchIndex
+    } = props;
 
-    const connectorConstruct = new StreamConnectorConstruct(this, 'DeliveryConnector', connectorProps);
+    const deliveryRole = new iam.Role(this, 'DeliveryRole', {
+      assumedBy: new iam.ServicePrincipal('firehose.amazonaws.com'),
+    });
+    // Adds statement to write backups to s3
+    deliveryRole.addToPolicy(new iam.PolicyStatement()
+      .addResource(backupBucket.bucketArn)
+      .addActions('s3:*'));
+    // Adds statement to access to the Elasticsearch domain
+    deliveryRole.addToPolicy(new iam.PolicyStatement()
+      .addResource(this.domainArn + '/*')
+      .addResource(this.domainArn)
+      .addActions('es:*'));
+    deliveryRole.node.addDependency(this);
 
-    // Grants ESHttp* access
-    connectorConstruct.streamConnector.role!.addToPolicy(new iam.PolicyStatement()
-      .addResource(this.instance.domainArn)
-      .addActions('es:ESHttp*'));
-      // Broad permissions
-      // .addResource("arn:aws:es:::")
-      // .addActions('es:*'));
+    //
+    const deliveryStream = new firehose.CfnDeliveryStream(this, id, {
+      elasticsearchDestinationConfiguration: {
+        domainArn: this.domainArn,
+        indexName: elasticsearchIndex,
+        indexRotationPeriod: 'NoRotation',
+        typeName: '_doc',
+        roleArn: deliveryRole.roleArn,
+        retryOptions: {
+          durationInSeconds: 60
+        },
+        bufferingHints: {
+          intervalInSeconds: 60,
+          sizeInMBs: 50
+        },
+        s3BackupMode: 'AllDocuments',
+        s3Configuration: {
+          bucketArn: backupBucket.bucketArn,
+          compressionFormat: 'UNCOMPRESSED',
+          roleArn: deliveryRole.roleArn,
+          bufferingHints: {
+            intervalInSeconds: 60,
+            sizeInMBs: 50
+          },
+        }
+      }
+    });
+
+    // Persists delivery stream
+    this.deliveryStreams[id] = deliveryStream;
+
+    const deliveryStreamOutput = new cdk.CfnOutput(this, 'DeliveryStreamArn', {
+      description: 'Delivery stream ARN',
+      value: deliveryStream.deliveryStreamArn
+    });
 
     return this;
   };
 }
-
-class StreamConnectorConstruct extends cdk.Construct {
-
-  streamConnector: lambda.Function;
-
-  constructor(scope: cdk.Construct, id: string, props: StreamConnectorProps) {
-    super(scope, id);
-
-    const {
-      endpoint, vpcPlacement, stream, searchIndex
-    } = props;
-
-    // Defines message stream handler
-    this.streamConnector = new lambda.Function(this, id, {
-      runtime: lambda.Runtime.NodeJS810,
-      handler: 'index.handler',
-      timeout: props.timeout,
-      code: lambda.Code.asset('./bin/delivery-handler'),
-      environment: {
-        elasticsearch_endpoint: endpoint,
-        elasticsearch_index: searchIndex
-      },
-      ...vpcPlacement,
-    });
-
-    this.streamConnector.addEventSource(new event_sources.KinesisEventSource(stream, {
-      startingPosition: lambda.StartingPosition.Latest
-    }));
-
-    // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
-    stream.grantRead(this.streamConnector.role);
-  }
-}
-
-interface StreamConnectorProps extends DeliveryProps {
-  endpoint: string
-  stream: kinesis.Stream
-}
-
