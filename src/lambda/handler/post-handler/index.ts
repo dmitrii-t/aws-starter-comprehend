@@ -44,7 +44,7 @@ export async function post(postEvent: any) {
     .map((text: string, line: number) => ({client, createdAt, text, line} as TextLine));
   console.info(`Processing post from ${request.client} with ${lines.length} lines`);
 
-  await AwsKinesisUtil.asyncPutRecords(outputStream, entries, toPutRecordsRequestEntries);
+  await AwsKinesisUtil.kinesisPutRecordsAsync(outputStream, entries, toPutRecordsRequestEntries);
   console.info(`Successfully processed post ${request.client}`);
 
   // Success
@@ -56,12 +56,11 @@ export async function post(postEvent: any) {
   } as PostResponse;
 }
 
-export function toPutRecordsRequestEntries(record: TextLine): PutRecordsRequestEntry {
-  const id = record.line + '-' + record.text;
+function toPutRecordsRequestEntries(record: TextLine): PutRecordsRequestEntry {
   return {
     Data: JSON.stringify(record),
     // Generates partition keys
-    PartitionKey: createHash('md5').update(id).digest('hex')
+    PartitionKey: createHash('md5').update(record.client).digest('hex')
   } as PutRecordsRequestEntry
 }
 

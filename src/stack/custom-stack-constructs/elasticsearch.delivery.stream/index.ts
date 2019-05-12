@@ -36,7 +36,7 @@ export function patchElasticsearchConstructWithDeliveryStream() {
    */
   ElasticsearchConstruct.prototype.withDeliveryStream = function (fromStream: kinesis.Stream, props: DeliveryProps): ElasticsearchConstruct {
     const connectorProps: StreamConnectorProps = {
-      endpoint: this.endpoint,
+      endpoint: this.domainEndpoint,
       stream: fromStream,
       ...props,
     };

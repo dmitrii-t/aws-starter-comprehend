@@ -28,10 +28,17 @@ export class ElasticsearchConstruct extends CustomConstruct<es.CfnDomain> {
   }
 
   /**
-   * Returns endpoint url
+   * Returns cluster endpoint url
    */
-  get endpoint(): string {
+  get domainEndpoint(): string {
     return this.instance.domainEndpoint;
+  }
+
+  /**
+   * Returns cluster arn
+   */
+  get domainArn(): string {
+    return this.instance.domainArn;
   }
 
   constructor(scope: cdk.Construct, id: string = 'Elasticsearch', props?: VpcPlacement) {

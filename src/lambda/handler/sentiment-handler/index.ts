@@ -1,7 +1,7 @@
 import * as AwsKinesisUtil from '../../util/aws/kinesis';
 import * as AwsComprehendUtil from '../../util/aws/comprehend';
 import { TextLine } from '../../model';
-import { toPutRecordsRequestEntries } from '../post-handler';
+import { Record } from 'aws-sdk/clients/firehose';
 
 export async function handler(streamEvent: any) {
   process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
@@ -15,8 +15,14 @@ export async function handler(streamEvent: any) {
   const sentimented = await Promise.all(records.map((record) => withSentiment(record)));
 
   // Blocks execution to get the results
-  await AwsKinesisUtil.asyncPutRecords(outputStream, sentimented, toPutRecordsRequestEntries);
+  await AwsKinesisUtil.firehosePutRecordsAsync(outputStream, sentimented, toPutRecordsRequestEntries);
   console.info(`processed ${sentimented.length} records:\n${JSON.stringify(sentimented)}`)
+}
+
+function toPutRecordsRequestEntries(record: TextLine): Record {
+  return {
+    Data: JSON.stringify(record),
+  } as Record
 }
 
 async function withSentiment(record: TextLine): Promise<TextLine> {

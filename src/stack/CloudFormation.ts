@@ -6,6 +6,8 @@ import * as kinesis from '@aws-cdk/aws-kinesis'
 import * as lambda from '@aws-cdk/aws-lambda'
 import * as event_sources from '@aws-cdk/aws-lambda-event-sources'
 import * as iam from '@aws-cdk/aws-iam'
+import * as firehose from '@aws-cdk/aws-kinesisfirehose';
+import * as s3 from '@aws-cdk/aws-s3';
 
 import { patchElasticsearchConstructWithDeliveryStream } from './custom-stack-constructs/elasticsearch.delivery.stream'
 import { VpcConstruct } from './custom-stack-constructs/vpc'
@@ -58,33 +60,6 @@ class AwsStarterSentimentAnalysisStack extends cdk.Stack {
       .addCors({origin: '*', allowMethods: ['POST']})
       .addLambdaProxyIntegration('POST', postHandler);
 
-    // Defines Kinesis stream to deliver processed text lines to Elasticsearch cluster
-    const deliveryStream = new kinesis.Stream(this, 'DeliveryStream');
-
-    // Defines lambda handler to append recognized sentiment to submitted text lines
-    const sentimentHandler = new lambda.Function(this, 'SentimentHandler', {
-      runtime: lambda.Runtime.NodeJS810,
-      handler: 'index.handler',
-      timeout: 10,
-      code: lambda.Code.asset('./bin/sentiment-handler'),
-      environment: {
-        output_stream: deliveryStream.streamName
-      },
-    });
-    // Adds Kinesis post stream as a source
-    sentimentHandler.addEventSource(new event_sources.KinesisEventSource(postStream, {
-      startingPosition: lambda.StartingPosition.Latest
-    }));
-    // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
-    // to the sentimentHandler to allow it to read post stream and publish to the delivery stream
-    postStream.grantRead(sentimentHandler.role);
-    deliveryStream.grantWrite(sentimentHandler.role);
-
-    // Adds permission comprehend:DetectSentiment
-    sentimentHandler.role!.addToPolicy(new iam.PolicyStatement()
-      .addAllResources()
-      .addActions('comprehend:DetectSentiment'));
-
     // Defines VPC construct
     const vpcConstruct = new VpcConstruct(this, 'Vpc', {maxAZs: 1});
 
@@ -100,17 +75,92 @@ class AwsStarterSentimentAnalysisStack extends cdk.Stack {
 
     // Elasticsearch
     const elasticsearchConstruct = new ElasticsearchConstruct(this, 'SearchCluster', elasticsearchPlacement)
-      .withDeliveryStream(deliveryStream, {
-        vpcPlacement: elasticsearchPlacement,
-        searchIndex: elasticsearchIndex,
-        timeout: 10
-      });
+    // .withDeliveryStream(deliveryStream, {
+    //   vpcPlacement: elasticsearchPlacement,
+    //   searchIndex: elasticsearchIndex,
+    //   timeout: 10
+    // })
+    ;
+
+    //
+    const deliveryBackupBucket = new s3.Bucket(this, 'DeliveryBackup');
+
+    const deliveryRole = new iam.Role(this, 'DeliveryRole', {
+      assumedBy: new iam.ServicePrincipal('firehose.amazonaws.com'),
+    });
+    // Adds statement to write backups to s3
+    deliveryRole.addToPolicy(new iam.PolicyStatement()
+      .addResource(deliveryBackupBucket.bucketArn)
+      .addActions('s3:*'));
+    // Adds statement to access to the Elasticsearch domain
+    deliveryRole.addToPolicy(new iam.PolicyStatement()
+      .addResource(elasticsearchConstruct.domainArn + '/*')
+      .addResource(elasticsearchConstruct.domainArn)
+      .addActions('es:*'));
+    deliveryRole.node.addDependency(elasticsearchConstruct);
+
+    //
+    const deliveryStream = new firehose.CfnDeliveryStream(this, 'DeliveryStream', {
+      elasticsearchDestinationConfiguration: {
+        domainArn: elasticsearchConstruct.domainArn,
+        indexName: elasticsearchIndex,
+        indexRotationPeriod: 'NoRotation',
+        typeName: '_doc',
+        roleArn: deliveryRole.roleArn,
+        retryOptions: {
+          durationInSeconds: 60
+        },
+        bufferingHints: {
+          intervalInSeconds: 60,
+          sizeInMBs: 50
+        },
+        s3BackupMode: 'AllDocuments',
+        s3Configuration: {
+          bucketArn: deliveryBackupBucket.bucketArn,
+          compressionFormat: 'UNCOMPRESSED',
+          roleArn: deliveryRole.roleArn,
+          bufferingHints: {
+            intervalInSeconds: 60,
+            sizeInMBs: 50
+          },
+        }
+      }
+    });
+
+    // Defines lambda handler to append recognized sentiment to submitted text lines
+    const sentimentHandler = new lambda.Function(this, 'SentimentHandler', {
+      runtime: lambda.Runtime.NodeJS810,
+      handler: 'index.handler',
+      timeout: 10,
+      code: lambda.Code.asset('./bin/sentiment-handler'),
+      environment: {
+        output_stream: deliveryStream.deliveryStreamName
+      },
+    });
+    // Adds Kinesis post stream as a source
+    sentimentHandler.addEventSource(new event_sources.KinesisEventSource(postStream, {
+      startingPosition: lambda.StartingPosition.Latest
+    }));
+    // Adds permissions kinesis:DescribeStream, kinesis:PutRecord, kinesis:PutRecords
+    // to the sentimentHandler to allow it to read post stream and publish to the delivery stream
+    postStream.grantRead(sentimentHandler.role);
+
+    // Adds permission comprehend:DetectSentiment
+    sentimentHandler.role!
+      .addToPolicy(new iam.PolicyStatement()
+        .addAllResources()
+        .addActions('comprehend:DetectSentiment'));
+
+    // Adds permission to write to Firehose
+    sentimentHandler.role!.addToPolicy(new iam.PolicyStatement()
+        .addResource(deliveryStream.deliveryStreamArn)
+        .addActions('firehose:*'));
 
     // EC2 configuration below
     const amazonLinuxImage = new ec2.AmazonLinuxImage().getImage(this);
 
     // Defines alias of the endpoint  elasticsearch cluster
-    const endpoint = elasticsearchConstruct.endpoint;
+    const endpoint = elasticsearchConstruct.domainEndpoint;
 
     // Defines HTTP proxy init block
     const proxyInit = cdk.Fn.sub([

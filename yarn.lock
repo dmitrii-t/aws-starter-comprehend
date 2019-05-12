@@ -162,6 +162,12 @@
     "@aws-cdk/aws-logs" "^0.26.0"
     "@aws-cdk/cdk" "^0.26.0"
 
+"@aws-cdk/aws-kinesisfirehose@0.26":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kinesisfirehose/-/aws-kinesisfirehose-0.26.0.tgz#3280edebb928f0a7425a7488cb929982c58d73e2"
+  dependencies:
+    "@aws-cdk/cdk" "^0.26.0"
+
 "@aws-cdk/aws-kms@^0.26.0":
   version "0.26.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-kms/-/aws-kms-0.26.0.tgz#e796cb2f9162b6b95dcb429bfa41d5260821ea58"
